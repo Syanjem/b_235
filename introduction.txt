@@ -1,0 +1,6 @@
+
+
+
+// AHB	120MHz
+// APB1	 60MHz	can0	i2c0
+// APB2	120MHz	timer0	spi0  gpioA-G

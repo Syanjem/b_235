@@ -1,0 +1,27 @@
+【电源设置】	24V		5.2A
+
+(ic, ib_shot) 		- adc_inserted, (x - 2048) / 2048.0f	- (ia, ib)（标幺化）
+(ia, ib)		 	- clarke, * 2/3							- (i_alpha, i_beta)
+(i_alpha, i_beta)	- parke									- (id, iq)
+
+(pv_shot) 			- adc_inserted, (x / 4095.0f) * 3.3f * 5.5f		- (vbus_V)
+
+【电机数据】
+ 额定转速		3000 （6000）rpm
+ 额定电压		24V
+ 额定电流		6.6A
+ 额定功率		180W
+ 额定转矩		1.719 N.M
+ 转子惯量		230
+
+
+
+
+pv->k = _SQRT3 * vdq_mag / vbus;
+
+
+
+
+
+
+

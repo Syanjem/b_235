@@ -1,0 +1,212 @@
+#include "svpwm.h"
+
+V_Struct v_s = {
+	.v_d 		= 0.0f,
+	.v_q		= 1.0f,
+	.k 			= 0.5,
+	.v_alpha	= 0.0f,
+	.v_beta		= 1.0f,	
+	.sector		= 2u,
+};
+
+ABCpwm_Struct abc_s = {
+	.period		= 3000,
+	.begin		= 1200,
+	.end		= 2700,
+	.T			= 1000,
+	.duty_a		= 1500,
+	.duty_b		= 2000,
+	.duty_c		= 2500,
+};
+
+void pwm_output_update(V_Struct* pv, ABCpwm_Struct* pabc)
+{
+	uint8_t sector;
+	SVPWM_Sector(pv->v_alpha, pv->v_beta, &sector);
+	
+	float k1, k2;
+	SVPWM_V123T12(pv->v_alpha, pv->v_beta, sector, &k1, &k2);
+	
+	SVPWM_ABCDuty(k1, k2, sector, pv->k, pabc->period,
+					&pabc->duty_a, &pabc->duty_b, &pabc->duty_c);
+	
+	set_pwm_abc(pabc);
+}
+
+void SVPWM_Sector(float alpha, float beta, uint8_t* ps)
+{
+    if (alpha == 0.0f && beta == 0.0f)
+    {
+        *ps = 0u; // 零矢量
+    }
+	else
+	{
+		if (beta > 0.0f)
+		{
+			if ( ABS(beta) > ABS(_SQRT3 * alpha) )		*ps = 2u;
+			else
+			{
+				if (alpha > 0.0f)	*ps = 1u;
+				else				*ps = 3u;
+			}
+		}
+		else 
+		{
+			if ( ABS(beta) > ABS(_SQRT3 * alpha) )		*ps = 5u;
+			else
+			{
+				if (alpha > 0.0f)	*ps = 6u;
+				else				*ps = 4u;
+			}
+		}
+	}
+}
+
+
+void SVPWM_V123T12(float v_alpha, float v_beta, int8_t sector, float* pT1, float* pT2)
+{
+    /* 3.计算基本矢量时间比例系数 */
+    // 中间变量
+    float v_1 = fabs(v_beta);
+    float v_2 = fabs(_SQRT3_2 * v_alpha + 0.5f * v_beta);
+    float v_3 = fabs(_SQRT3_2 * v_alpha - 0.5f * v_beta);
+
+    // 2. 根据扇区计算Ta, Tb, Tc (作用时间)
+    switch (sector)
+    {
+    case 1: // 0~60度: U1(011), U2(001)
+        *pT1 = v_3;
+        *pT2 = v_1;
+        break;
+    case 2: // 60~120度: U2(001), U3(101)
+        *pT1 = v_2;
+        *pT2 = v_3;
+        break;
+    case 3: // 120~180度: U3(101), U4(100)
+        *pT1 = v_1;
+        *pT2 = v_2;
+        break;
+    case 4: // 180~240度: U4(100), U5(110)
+        *pT1 = v_3;
+        *pT2 = v_1;
+        break;
+    case 5: // 240~300度: U5(110), U6(010)
+        *pT1 = v_2;
+        *pT2 = v_3;
+        break;
+    case 6: // 300~360度: U6(010), U1(011)
+        *pT1 = v_1;
+        *pT2 = v_2;
+        break;
+    default:
+        *pT1 = 0;
+        *pT2 = 0;
+        break;
+    }
+}
+
+
+void SVPWM_ABCDuty(float T1, float T2, int8_t s, float k, uint16_t period, 
+					uint16_t *pTA, uint16_t *pTB, uint16_t *pTC)
+{
+    if (T1 + T2 == 0.0f)
+    {
+        // 零电压矢量, 输出 50% 占空比
+        *pTA = period / 2;
+        *pTB = period / 2;
+        *pTC = period / 2;
+        return;
+    }
+    else
+    {
+        // 1. 归一化: T1/T2 是相对值, 转成实际占空比时间
+        float sum = T1 + T2;
+        float t1_norm = T1 / sum;  // T1 占比
+        float t2_norm = T2 / sum;  // T2 占比
+
+        // 2. k 作用于总有效矢量时间: t1+t2 = k * period
+        uint16_t t_total = (uint16_t)(k * period);  // 总有效时间
+        uint16_t t1 = (uint16_t)(t_total * t1_norm);
+        uint16_t t2 = t_total - t1;  // 避免累计误差
+        
+        // 3. 零矢量时间 = period - t1 - t2, 前后各一半
+        uint16_t t0 = (period - t1 - t2) / 2;
+
+        switch (s)
+        {
+        case 1: // 0~60度: U1(011), U2(001)		cba（21:21）
+            *pTA = t0 + t2 + t1;
+            *pTB = t0 + t2;
+            *pTC = t0;
+            break;
+        case 2: // 60~120度: U2(001), U3(101)	cab（23:12）
+            *pTA = t0 + t1;
+            *pTB = t0 + t1 + t2;
+            *pTC = t0;
+            break;
+        case 3: // 120~180度: U3(101), U4(100)	acb（43:21）
+            *pTA = t0;
+            *pTB = t0 + t2 + t1;
+            *pTC = t0 + t2;
+            break;
+        case 4: // 180~240度: U4(100), U5(110)	abc（45:12）
+            *pTA = t0;
+            *pTB = t0 + t1;
+            *pTC = t0 + t1 + t2;
+            break;
+        case 5: // 240~300度: U5(110), U6(010)	bac（65:21）
+            *pTA = t0 + t2;
+            *pTB = t0;
+            *pTC = t0 + t2 + t1;
+            break;
+        case 6: // 300~360度: U6(010), U1(011)	bca（61:12）
+            *pTA = t0 + t1 + t2;
+            *pTB = t0;
+            *pTC = t0 + t1;
+            break;
+        default:
+            *pTA = *pTB = *pTC = 0;
+            break;
+        }
+    }
+}
+
+
+void set_pwm_abc(ABCpwm_Struct* pabc)
+{
+	
+	if (TIMER0_PWM_MODE == TIMER_OC_MODE_PWM1)		// PWM1（低 高）
+	{
+		timer_channel_output_pulse_value_config(TIMER0, TIMER_CH_2, pabc->duty_a);	
+		timer_channel_output_pulse_value_config(TIMER0, TIMER_CH_1, pabc->duty_b);	
+		timer_channel_output_pulse_value_config(TIMER0, TIMER_CH_0, pabc->duty_c);	
+	}
+	else if (TIMER0_PWM_MODE == TIMER_OC_MODE_PWM0)	// PWM0（高 低）
+	{
+		timer_channel_output_pulse_value_config(TIMER0, TIMER_CH_2, TIMER0_PERIOD - pabc->duty_a);	
+		timer_channel_output_pulse_value_config(TIMER0, TIMER_CH_1, TIMER0_PERIOD - pabc->duty_b);	
+		timer_channel_output_pulse_value_config(TIMER0, TIMER_CH_0, TIMER0_PERIOD - pabc->duty_c);	
+	}
+}
+
+
+
+
+
+void pwm_output_update_debug(V_Struct* pv, ABCpwm_Struct* pabc)
+{
+    float Va = CLAMP(pv->v_alpha, -1.0f, 1.0f);
+    float Vb = CLAMP(-0.5f * pv->v_alpha + _SQRT3_2 * pv->v_beta, -1.0f, 1.0f);
+    float Vc = CLAMP(-0.5f * pv->v_alpha - _SQRT3_2 * pv->v_beta, -1.0f, 1.0f);
+	
+	pabc->duty_a = (uint16_t)((Va + 1.0f) * 0.5f * pabc->period);	
+	pabc->duty_b = (uint16_t)((Vb + 1.0f) * 0.5f * pabc->period);		
+	pabc->duty_c = (uint16_t)((Vc + 1.0f) * 0.5f * pabc->period);	
+	
+	set_pwm_abc(pabc);
+}
+
+
+
+
+
