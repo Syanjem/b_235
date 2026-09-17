@@ -38,7 +38,10 @@ void foc_task(void)
 		// 也是 foc 运行模式（内含 foc pi算法与输出），其他模式启动后，foc 要运行，都要转到这里
 		case FOC_BEGIN_MODE_POWER_UP:
 		{
-			p_num++;
+			if (p_num <51000)
+			{
+				p_num++;
+			}
 			/* CAN 停止命令: 切回 CAN_SIGNAL 待机, 重新配 EXTI 等下次启动 */
 			if (can_stop == 1)
 			{
