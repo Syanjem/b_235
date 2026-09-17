@@ -195,7 +195,7 @@ void foc_switch_mode_task(void)
 			break;		
 		}
 		
-		case FOC_RUNNING_STATE_STOP:
+		case FOC_SWITCH_STATE_STOP:
 		{
 			motorData.state.focSwitchState		= FOC_SWITCH_STATE_OFF;
 			__disable_irq();
@@ -207,39 +207,6 @@ void foc_switch_mode_task(void)
 		case FOC_SWITCH_STATE_OFF:	break;
 	}
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -264,17 +231,6 @@ void foc_pi_task(FOC_RUNNING_CONTROL_MODE fcm)
 		}
 	}
 }
-
-
-
-
-
-
-
-
-
-
-
 
 
 
