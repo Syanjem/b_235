@@ -26,11 +26,11 @@ Pi_Para_Struct pi3_iq_para = {
     .out_min 		= -1.0f,
     .integral_max 	= 20.0f,   		// Ki*integral_max = 0.05*20 = 1.0pu
 };
-
+	
 Pi_Para_Struct pi3_id_para = {
     .Kp 			= 0.2f,         // 0.3 → 0.2, 配合减小的滤波延迟
     .Ki 			= 0.05f,        // 不变
-    .integral 		= 0.0f,
+    .integral 		= 0.0f,			
     .out_max 		= 1.0f,
     .out_min 		= -1.0f,
     .integral_max 	= 20.0f,   		// Ki*integral_max = 0.05*20 = 1.0pu

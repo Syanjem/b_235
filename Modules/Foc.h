@@ -22,6 +22,7 @@ extern volatile uint8_t adc_trig_cnt;
 void ADC0_1_IRQHandler(void);
 
 
+extern volatile uint8_t stop;
 
 void foc_task(void);
 void foc_pi_task(FOC_CONTROL_MODE fcm);

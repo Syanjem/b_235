@@ -83,6 +83,17 @@ int main(void)
 	
 	while(1)
 	{
+		
+		if (stop == 1u)
+		{
+			__disable_irq();
+			GPIO_adcBackRead_start();
+			adc_disable(ADC0);
+			timer_disable(TIMER0);
+			stop = 2u;
+		}
+		
+		
 //		测试零点偏移
 //		delay_1ms(10);
 //		angleCs_uint16_t_fromEncoder(&acs);

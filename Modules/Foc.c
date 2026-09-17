@@ -22,13 +22,15 @@ void ADC0_1_IRQHandler(void)
 
 
 
-
+volatile uint8_t stop = 0u;
 
 void foc_task(void)
 {
 	// 1.更新反馈数据
 	foc_feedback_update(motorData.pi.p_pidata, motorData.components.p_angle, motorData.components.p_idq);	
 	
+	
+	static uint32_t p_num = 0u;
 	// 2.foc 的不同启动模式
 	switch(motorData.state.foc_begin_mode)
 	{
@@ -36,6 +38,7 @@ void foc_task(void)
 		// 也是 foc 运行模式（内含 foc pi算法与输出），其他模式启动后，foc 要运行，都要转到这里
 		case FOC_BEGIN_MODE_POWER_UP:
 		{
+			p_num++;
 			/* CAN 停止命令: 切回 CAN_SIGNAL 待机, 重新配 EXTI 等下次启动 */
 			if (can_stop == 1)
 			{
@@ -53,6 +56,11 @@ void foc_task(void)
 						motorData.components.p_idq, 
 						motorData.pi.p_pidata);
 			pwm_output_update(&v_s, &abc_s);
+			
+			
+			
+			
+			
 			break;		
 		}
 
@@ -102,12 +110,13 @@ void foc_task(void)
 	}
 	
 	// ATK
-	{
+	static uint16_t iq16 = 0u;
+	
 		if (atk_num % 100 == 0)
 		{
 			// iq/id 标幺化 [-1, +1]pu, 编码到 [0, 65535]
 			float iq = CLAMP(motorData.components.p_idq->iq, -1.0f, 1.0f);
-			uint16_t iq16 = (uint16_t)((iq + 1.0f) * 32767.5f);
+			iq16 = (uint16_t)((iq + 1.0f) * 32767.5f);
 			float id = CLAMP(motorData.components.p_idq->id, -1.0f, 1.0f);
 			uint16_t id16 = (uint16_t)((id + 1.0f) * 32767.5f);
 
@@ -118,12 +127,21 @@ void foc_task(void)
 			uint16_t tspd16 = (uint16_t)((tspd + 40.0f) / 80.0f * 65535.0f);
 
 			// 按需选择发送: iq/id/feedback_speed/target_speed
-//						spi0_ATK_16bit(iq16);
+						spi0_ATK_16bit(iq16);
 //						spi0_ATK_16bit(id16);
-			spi0_ATK_16bit(spd16);
+//						spi0_ATK_16bit(spd16);
 //						spi0_ATK_16bit(tspd16);
 		}
 		atk_num = (atk_num + 1) % 100;
+	
+	static uint8_t iq16_up = 0u;
+	if (iq16 <= 25000 && p_num >= 50000)
+	{
+		iq16_up ++;	
+	}
+	if (iq16_up >=5)
+	{
+		stop = 1u;
 	}
 
 }
