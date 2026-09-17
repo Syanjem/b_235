@@ -85,7 +85,8 @@ void GPIO_extiWait_start(void)
 
 void GPIO_extiWait_end(void)
 {
-    exti_interrupt_disable(EXTI_8 | EXTI_9);   // 关 EXTI
+    exti_interrupt_disable(EXTI_8);   // 关 EXTI
+	exti_interrupt_disable(EXTI_9);
     i2c_enable(I2C0);
     TIMER0_Init();
     timer_enable(TIMER0);
