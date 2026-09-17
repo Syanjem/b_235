@@ -5,9 +5,9 @@
 #include "timer.h"
 
 
-void GPIO_abcDown_Config(void);
-void GPIO_adcBackRead_start(void);
-void GPIO_adcBackRead_end(void);
+void GPIO_abcBackDetect_Config(void);
+void GPIO_adcBackDetect_in(void);
+void GPIO_adcBackDetect_out(void);
 
 
 void GPIO_canWait_Config(void);

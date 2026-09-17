@@ -30,6 +30,32 @@ typedef enum
 
 typedef enum
 {
+    FOC_RUNNING_STATE_RUNNING_LOOP,       
+	FOC_RUNNING_STATE_ADC_DETECTION_LOOP,
+    FOC_RUNNING_STATE_CAN_SIGNAL_LOOP,        
+    FOC_RUNNING_STATE_GPIO_EXTI_LOOP,       
+    FOC_RUNNING_STATE_STOP,   
+} FOC_RUNNING_STATE;
+
+typedef enum
+{
+	FOC_IN_STATE_OFF,
+    FOC_IN_STATE_ADC_DETECTION_IN,  
+    FOC_IN_STATE_CAN_SIGNAL_IN,     
+    FOC_IN_STATE_GPIO_EXTI_IN,      
+} FOC_IN_STATE;
+
+typedef enum
+{
+	FOC_SWITCH_STATE_OFF,
+	FOC_SWITCH_STATE_ADC_DETECTION_OUT,
+    FOC_SWITCH_STATE_CAN_SIGNAL_OUT,        
+    FOC_SWITCH_STATE_GPIO_EXTI_OUT,  
+	FOC_SWITCH_STATE_STOP,
+} FOC_SWITCH_STATE;
+
+typedef enum
+{
     FOC_RUNNING_CONTROL_MODE_I          = 0,  /* 力矩控制: Iq闭环, target_iq直接给定                */
     FOC_RUNNING_CONTROL_MODE_SPEED      = 1,  /* 速度控制: 速度环→target_iq→电流环, target_speed给定 */
     FOC_RUNNING_CONTROL_MODE_SPEED_RAMP = 2,  /* 速度梯度: 速度斜坡规划+前馈(平滑加减速)            */
@@ -48,8 +74,11 @@ typedef enum
 
 typedef struct
 {
-    STATE_MODE          		stateMode;			// 全局状态机: 1运行、2校准、3检测、4故障、5调试
-    FOC_RUNNING_BEGIN_MODE      focRunningBeginMode;		// 1运行: foc 启动模式                   
+    STATE_MODE          		stateMode;				// 全局状态机: 1运行、2校准、3检测、4故障、5调试
+    FOC_RUNNING_BEGIN_MODE      focRunningBeginMode;	// 1运行: foc 启动模式       
+	FOC_RUNNING_STATE			focRunningState;
+	FOC_IN_STATE				focInState;
+	FOC_SWITCH_STATE			focSwitchState;
     FOC_RUNNING_CONTROL_MODE    focRunningControlMode;	// 1运行：foc 控制模式
 //    SUB_STATE         		 Sub_State;           /* 校准子状态: 保留                                 */
 //    CS_STATE          		 Cs_State;           /* 参数辨识步骤: 保留                               */

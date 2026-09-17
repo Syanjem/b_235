@@ -18,14 +18,27 @@ extern volatile uint16_t atk_num;
 
 extern volatile uint8_t foc_mode;
 extern volatile uint16_t num_send;
-extern volatile uint8_t adc_trig_cnt;
 void ADC0_1_IRQHandler(void);
 
 
-extern volatile uint8_t stop;
-
 void foc_task(void);
+
+
+void foc_begin_mode_choose_task(void);
+void foc_switch_mode_task(void);
+
+
+
+
+
+
+
+
+
+
+
 void foc_pi_task(FOC_RUNNING_CONTROL_MODE fcm);
+
 
 
 

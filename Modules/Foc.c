@@ -9,7 +9,6 @@ volatile uint8_t foc_mode = 1;
 volatile float foc_target_set = 0.0f;
 volatile uint8_t can_stop = 0;
 volatile uint16_t num_send = 0;
-volatile uint8_t adc_trig_cnt = 0;
 void ADC0_1_IRQHandler(void)
 {
     if (RESET != adc_flag_get(ADC0, ADC_FLAG_EOIC)) 
@@ -22,21 +21,17 @@ void ADC0_1_IRQHandler(void)
 
 
 
-volatile uint8_t stop = 0u;
-
 void foc_task(void)
 {
 	// 1.更新反馈数据
 	foc_feedback_update(motorData.pi.p_pidata, motorData.components.p_angle, motorData.components.p_idq);	
 	
-	
 	static uint32_t p_num = 0u;
+	
 	// 2.foc 的不同启动模式
-	switch(motorData.state.focRunningBeginMode)
+	switch(motorData.state.focRunningState)
 	{
-		// ① 上电启动模式：上电直接开始转动
-		// 也是 foc 运行模式（内含 foc pi算法与输出），其他模式启动后，foc 要运行，都要转到这里
-		case FOC_RUNNING_BEGIN_MODE_POWER_UP:
+		case FOC_RUNNING_STATE_RUNNING_LOOP:
 		{
 			if (p_num <51000)
 			{
@@ -53,32 +48,26 @@ void foc_task(void)
 			// foc pi 算法
 			foc_pi_task(motorData.state.focRunningControlMode);
 
-			
 			v_update(motorData.components.p_v, 
 						motorData.components.p_angle, 
 						motorData.components.p_idq, 
 						motorData.pi.p_pidata);
 			pwm_output_update(&v_s, &abc_s);
 			
-			
-			
-			
-			
 			break;		
 		}
 
-		// ② adc 触发模式：检测到 adc 的电流变化而启动
-		// dl 拖动电机产生感应电动势，产生感应电流
-		case FOC_RUNNING_BEGIN_MODE_ADC_DETECTION:
+		case FOC_RUNNING_STATE_ADC_DETECTION_LOOP:
 		{
+			static uint8_t adc_trig_cnt = 0;
+			
 			/* 零点 ≈ 2048，偏离 ±40（约 ±0.6A）才认为有真实电流跳变 */
-			if(motorData.components.p_idq->ic_shot < 1908 ||
-				motorData.components.p_idq->ic_shot > 2188)
+			if(motorData.components.p_idq->ic_shot < 1908 || motorData.components.p_idq->ic_shot > 2188)
 			{
-				if (++adc_trig_cnt >= 3)   /* 连续 3 次（约150us）确认，去抖 */
+				adc_trig_cnt++;
+				if (adc_trig_cnt >= 3)   /* 连续 3 次（约150us）确认，去抖 */
 				{
-					motorData.state.focRunningBeginMode = FOC_RUNNING_BEGIN_MODE_POWER_UP;
-					GPIO_adcBackRead_end();
+					motorData.state.focSwitchState = FOC_SWITCH_STATE_ADC_DETECTION_OUT;
 					adc_trig_cnt = 0;
 				}
 			}
@@ -89,8 +78,7 @@ void foc_task(void)
 			break;		
 		}
 
-		// ③ can 信号控制模式
-		case FOC_RUNNING_BEGIN_MODE_CAN_SIGNAL:
+		case FOC_RUNNING_STATE_CAN_SIGNAL_LOOP:
 		{
 //			if (can_ok == 1)
 //			{
@@ -100,12 +88,11 @@ void foc_task(void)
 			break;		
 		}
 		
-		case FOC_RUNNING_BEGIN_MODE_GPIO_EXTI:
+		case FOC_RUNNING_STATE_GPIO_EXTI_LOOP:
 		{
 			if (exti_foc_ok == 1)
 			{
-				motorData.state.focRunningBeginMode = FOC_RUNNING_BEGIN_MODE_POWER_UP;
-				GPIO_extiWait_end();
+				motorData.state.focSwitchState = FOC_SWITCH_STATE_GPIO_EXTI_OUT;
 			}	
 			break;		
 		}
@@ -144,10 +131,116 @@ void foc_task(void)
 	}
 	if (iq16_up >=5)
 	{
-		stop = 1u;
+		motorData.state.focSwitchState = FOC_SWITCH_STATE_STOP;
 	}
 
 }
+
+
+void foc_begin_mode_choose_task(void)
+{
+	switch (motorData.state.focRunningBeginMode)
+	{
+		case FOC_RUNNING_BEGIN_MODE_POWER_UP: 
+		{
+			motorData.state.focInState = FOC_IN_STATE_OFF;
+			motorData.state.focRunningState = FOC_RUNNING_STATE_RUNNING_LOOP;
+			break;
+		}
+		case FOC_RUNNING_BEGIN_MODE_ADC_DETECTION:
+		{
+			motorData.state.focInState = FOC_IN_STATE_ADC_DETECTION_IN;
+			motorData.state.focRunningState = FOC_RUNNING_STATE_ADC_DETECTION_LOOP;
+			GPIO_adcBackDetect_in();
+			break;
+		}
+		case FOC_RUNNING_BEGIN_MODE_CAN_SIGNAL:
+		{
+			motorData.state.focInState = FOC_IN_STATE_CAN_SIGNAL_IN;
+			motorData.state.focRunningState = FOC_RUNNING_STATE_CAN_SIGNAL_LOOP;
+			GPIO_canWait_start();
+			break;
+		}
+		case FOC_RUNNING_BEGIN_MODE_GPIO_EXTI:
+		{	
+			motorData.state.focInState = FOC_IN_STATE_GPIO_EXTI_IN;
+			motorData.state.focRunningState = FOC_RUNNING_STATE_GPIO_EXTI_LOOP;
+			GPIO_extiWait_start();
+			break;
+		}
+	}
+}
+
+void foc_switch_mode_task(void)
+{
+	switch (motorData.state.focSwitchState)
+	{
+		case FOC_SWITCH_STATE_ADC_DETECTION_OUT: 
+		{
+			motorData.state.focSwitchState		= FOC_SWITCH_STATE_OFF;
+			__disable_irq();
+			motorData.state.focRunningState = FOC_RUNNING_STATE_RUNNING_LOOP;
+			GPIO_adcBackDetect_out();
+			__enable_irq();	
+			break;			
+		}
+		case FOC_SWITCH_STATE_CAN_SIGNAL_OUT:	break;
+		case FOC_SWITCH_STATE_GPIO_EXTI_OUT:
+		{
+			motorData.state.focSwitchState		= FOC_SWITCH_STATE_OFF;
+			__disable_irq();
+			motorData.state.focRunningState = FOC_RUNNING_STATE_RUNNING_LOOP;
+			GPIO_extiWait_end();
+			__enable_irq();	
+			break;		
+		}
+		
+		case FOC_RUNNING_STATE_STOP:
+		{
+			motorData.state.focSwitchState		= FOC_SWITCH_STATE_OFF;
+			__disable_irq();
+			GPIO_adcBackDetect_in();
+			adc_disable(ADC0);
+			timer_disable(TIMER0);
+			break;
+		}
+		case FOC_SWITCH_STATE_OFF:	break;
+	}
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 void foc_pi_task(FOC_RUNNING_CONTROL_MODE fcm)
