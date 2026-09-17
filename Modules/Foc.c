@@ -117,7 +117,7 @@ void foc_task(void)
 			uint16_t tspd16 = (uint16_t)((tspd + 40.0f) / 80.0f * 65535.0f);
 
 			// 按需选择发送: iq/id/feedback_speed/target_speed
-						spi0_ATK_16bit(iq16);
+//						spi0_ATK_16bit(iq16);
 //						spi0_ATK_16bit(id16);
 //						spi0_ATK_16bit(spd16);
 //						spi0_ATK_16bit(tspd16);
