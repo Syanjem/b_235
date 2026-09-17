@@ -11,69 +11,47 @@
 
 #include "general_def.h"
 
-#include "debug.h"
+
 
 
 int main(void)
 {
 	BSP_SysClock_Init();
-	BSP_timerTrigger_adcDetect_Config();
+	BSP_timerTrigger_adcDetect_Config();	
 	BSP_Connect_Init();		
 	
 	// 1. 初始化
-	motorData.state.state_mode = STATE_MODE_FocRunning;
-	motorData.state.foc_begin_mode = FOC_BEGIN_MODE_ADC_DETECTION;
-	motorData.state.foc_control_mode = FOC_CONTROL_MODE_SPEED_RAMP;
+	motorData.state.stateMode = STATE_MODE_RUNNING;
+	motorData.state.focRunningBeginMode = FOC_RUNNING_BEGIN_MODE_ADC_DETECTION;
+	motorData.state.focRunningControlMode = FOC_RUNNING_CONTROL_MODE_SPEED_RAMP;
 	
-	switch (motorData.state.foc_control_mode)
+	switch (motorData.state.focRunningControlMode)
 	{
-		case FOC_CONTROL_MODE_I:
+		case FOC_RUNNING_CONTROL_MODE_I:
 		{
 			foc_debug(1, -0.04f, 100, 10);
 			break;
 		}
-		case FOC_CONTROL_MODE_SPEED:
+		case FOC_RUNNING_CONTROL_MODE_SPEED:
 		{
 			break;
 		}
-		case FOC_CONTROL_MODE_SPEED_RAMP:
+		case FOC_RUNNING_CONTROL_MODE_SPEED_RAMP:
 		{
 			foc_debug(2, -2.5f, 100, 10);	// 千度/秒
 			break;
 		}
 	}
-	delay_1ms(2000);
+	delay_1ms(1000);
 	
 	
 //	2. 校准（ma_zero = 94.0f）
 //	angleZero_float_get((&angle_s);
 //	delay_1ms(1000);
 	
-	switch (motorData.state.foc_begin_mode)
-	{
-		case FOC_BEGIN_MODE_POWER_UP: 
-		{
-			break;
-		}
-		case FOC_BEGIN_MODE_ADC_DETECTION:
-		{
-			GPIO_adcBackRead_start();
-			break;
-		}
-		case FOC_BEGIN_MODE_CAN_SIGNAL:
-		{
-			GPIO_canWait_start();
-			break;
-		}
-		case FOC_BEGIN_MODE_GPIO_EXTI:
-		{	
-			GPIO_extiWait_start();
-			break;
-		}
-	}
-
+	foc_begin_mode_choose_task();
 	
-	BSP_timerTrigger_adcDetect_Enable();
+	BSP_timerTrigger_adcDetect_Enable();	// 使能 adc0, timer0
 	
 	
 //	测试零点偏移
@@ -84,14 +62,10 @@ int main(void)
 	while(1)
 	{
 		
-		if (stop == 1u)
-		{
-			__disable_irq();
-			GPIO_adcBackRead_start();
-			adc_disable(ADC0);
-			timer_disable(TIMER0);
-			stop = 2u;
-		}
+		foc_switch_mode_task();
+		
+		
+
 		
 		
 //		测试零点偏移

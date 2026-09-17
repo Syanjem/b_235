@@ -10,39 +10,78 @@
  
 typedef enum
 {
-    STATE_MODE_FocRunning,  /* 运行态: FOC闭环工作, PWM输出有效, 电流/速度/位置环激活   */
-    STATE_MODE_JiaoZhun,    /* 校准态: 电角度零点校准(angleDf_float_get(), 期间不做闭环控制    */
-    STATE_MODE_JianCe,      /* 检测态: 故障检测/参数辨识, 不输出PWM                    */
-    STATE_MODE_Fault,       /* 故障态: 过流/过压/过温/超速触发, 关PWM保护, 等待复位      */
+    STATE_MODE_RUNNING,		/* 运行态: FOC闭环工作, PWM输出有效, 电流/速度/位置环激活   */
+    STATE_MODE_CALIBRATION,	/* 校准态: 电角度零点校准(angleDf_float_get(), 期间不做闭环控制    */
+//    STATE_MODE_JianCe,      /* 检测态: 故障检测/参数辨识, 不输出PWM                    */
+    STATE_MODE_FAULT,       /* 故障态: 过流/过压/过温/超速触发, 关PWM保护, 等待复位      */
     STATE_MODE_DEBUG,       /* 调试态: 开环强制角度输出, 用于验证PWM/采样/编码器方向     */
+	STATE_MODE_STOP,
 } STATE_MODE;
 
 
 typedef enum
 {
-    FOC_BEGIN_MODE_POWER_UP,       /* 直接运行: 上电即启动FOC闭环(PWM立即输出)           */
-    FOC_BEGIN_MODE_ADC_DETECTION,  /* 电流检测启动: 三相短路接地, 等ADC检测到外力转动电流 */
-    FOC_BEGIN_MODE_CAN_SIGNAL,     /* CAN信号启动: 等上位机CAN命令(0x101)触发can_ok      */
-    FOC_BEGIN_MODE_GPIO_EXTI,      /* GPIO外部中断启动: 等PB8/PB9下降沿触发(预留)         */
-} FOC_BEGIN_MODE;
+    FOC_RUNNING_BEGIN_MODE_POWER_UP,       /* 直接运行: 上电即启动FOC闭环(PWM立即输出)           */
+    FOC_RUNNING_BEGIN_MODE_ADC_DETECTION,  /* 电流检测启动: 三相短路接地, 等ADC检测到外力转动电流 */
+    FOC_RUNNING_BEGIN_MODE_CAN_SIGNAL,     /* CAN信号启动: 等上位机CAN命令(0x101)触发can_ok      */
+    FOC_RUNNING_BEGIN_MODE_GPIO_EXTI,      /* GPIO外部中断启动: 等PB8/PB9下降沿触发(预留)         */
+} FOC_RUNNING_BEGIN_MODE;
 
 
 typedef enum
 {
-    FOC_CONTROL_MODE_I          = 0,  /* 力矩控制: Iq闭环, target_iq直接给定                */
-    FOC_CONTROL_MODE_SPEED      = 1,  /* 速度控制: 速度环→target_iq→电流环, target_speed给定 */
-    FOC_CONTROL_MODE_SPEED_RAMP = 2,  /* 速度梯度: 速度斜坡规划+前馈(平滑加减速)            */
-} FOC_CONTROL_MODE;
+    FOC_RUNNING_STATE_RUNNING_LOOP,       
+	FOC_RUNNING_STATE_ADC_DETECTION_LOOP,
+    FOC_RUNNING_STATE_CAN_SIGNAL_LOOP,        
+    FOC_RUNNING_STATE_GPIO_EXTI_LOOP,       
+} FOC_RUNNING_STATE;
+
+typedef enum
+{
+	FOC_IN_STATE_OFF,
+    FOC_IN_STATE_ADC_DETECTION_IN,  
+    FOC_IN_STATE_CAN_SIGNAL_IN,     
+    FOC_IN_STATE_GPIO_EXTI_IN,      
+} FOC_IN_STATE;
+
+typedef enum
+{
+	FOC_SWITCH_STATE_OFF,
+	FOC_SWITCH_STATE_ADC_DETECTION_OUT,
+    FOC_SWITCH_STATE_CAN_SIGNAL_OUT,        
+    FOC_SWITCH_STATE_GPIO_EXTI_OUT,  
+	FOC_SWITCH_STATE_STOP,
+} FOC_SWITCH_STATE;
+
+typedef enum
+{
+    FOC_RUNNING_CONTROL_MODE_I          = 0,  /* 力矩控制: Iq闭环, target_iq直接给定                */
+    FOC_RUNNING_CONTROL_MODE_SPEED      = 1,  /* 速度控制: 速度环→target_iq→电流环, target_speed给定 */
+    FOC_RUNNING_CONTROL_MODE_SPEED_RAMP = 2,  /* 速度梯度: 速度斜坡规划+前馈(平滑加减速)            */
+} FOC_RUNNING_CONTROL_MODE;
+
+typedef enum
+{
+    FOC_FAULT_STATE_NORMAL			= 0,  /* 正常: 无故障                                     */
+    FOC_FAULT_STATE_OVER_CURRENT,         /* 过流: ia/ib/ic 任一相超过 ±1.0pu (±33A)           */
+    FOC_FAULT_STATE_OVER_VOLTAGE,         /* 过压: vbus_V ≥ 上限 (如 28V)                      */
+    FOC_FAULT_STATE_UNDER_VOLTAGE,        /* 欠压: vbus_V ≤ 下限 (如 18V), 母线跌落           */
+    FOC_FAULT_STATE_OVER_TEMPERATURE,     /* 过温: NTC/MB1601B 读数 ≥ 阈值 (如 80°C)           */
+    FOC_FAULT_STATE_SPEEDING,             /* 超速: speed 超过 ±1.0pu (额定转速)                */
+} FOC_FAULT_STATE;
 
 
 typedef struct
 {
-    STATE_MODE          state_mode;        // 全局状态机: 1运行、2校准、3检测、4故障、5调试       
-    FOC_BEGIN_MODE      foc_begin_mode;    // 1运行: 如何触发启动                   
-    FOC_CONTROL_MODE    foc_control_mode;       /* 控制模式: 保留, 当前用全局 foc_mode 代替          */
-//    SUB_STATE          Sub_State;           /* 校准子状态: 保留                                 */
-//    CS_STATE           Cs_State;           /* 参数辨识步骤: 保留                               */
-//    FAULT_STATE        Fault_State;        /* 故障状态: 保留                                   */
+    STATE_MODE          		stateMode;				// 全局状态机: 1运行、2校准、3检测、4故障、5调试
+    FOC_RUNNING_BEGIN_MODE      focRunningBeginMode;	// 1运行: foc 启动模式       
+	FOC_RUNNING_STATE			focRunningState;
+	FOC_IN_STATE				focInState;
+	FOC_SWITCH_STATE			focSwitchState;
+    FOC_RUNNING_CONTROL_MODE    focRunningControlMode;	// 1运行：foc 控制模式
+//    SUB_STATE         		 Sub_State;           /* 校准子状态: 保留                                 */
+//    CS_STATE          		 Cs_State;           /* 参数辨识步骤: 保留                               */
+    FOC_FAULT_STATE				focFaultState;	// 4故障 
 } MOTOR_STATE;
 
 
@@ -92,15 +131,7 @@ typedef enum
  *    触发: 比较器/ADC采样/编码器越限 → 置 motorData.state.fault_state
  *    动作: 关PWM(timer_primary_output_config DISABLE) → 等待复位
  * -------------------------------------------------------------------------- */
-typedef enum
-{
-    FAULT_STATE_NORMAL           = 0,  /* 正常: 无故障                                     */
-    FAULT_STATE_OVER_CURRENT,          /* 过流: ia/ib/ic 任一相超过 ±1.0pu (±33A)           */
-    FAULT_STATE_OVER_VOLTAGE,          /* 过压: vbus_V ≥ 上限 (如 28V)                      */
-    FAULT_STATE_UNDER_VOLTAGE,         /* 欠压: vbus_V ≤ 下限 (如 18V), 母线跌落           */
-    FAULT_STATE_OVER_TEMPERATURE,      /* 过温: NTC/MB1601B 读数 ≥ 阈值 (如 80°C)           */
-    FAULT_STATE_SPEEDING,              /* 超速: speed 超过 ±1.0pu (额定转速)                */
-} FAULT_STATE;
+
 
 
 

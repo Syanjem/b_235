@@ -28,6 +28,22 @@ void BSP_Connect_Init(void)
 //	CAN_Init();		
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 // rcu，systick
 // timer0，adc0，spi0
 // MB1601B，FPC
@@ -59,7 +75,7 @@ void BSP_Monitor_Mode_InitConfig_Task(void)
 {
 	// 1.adc0 中断获取反馈电流
     timer_primary_output_config(TIMER0, DISABLE);	// 失能 timer0 的三相输出
-	GPIO_abcDown_Config();							// 维持三相下管导通
+	GPIO_abcBackDetect_Config();							// 维持三相下管导通
 	adc_enable(ADC0);	
 	delay_1ms(1);
 	adc_calibration_enable(ADC0);	
