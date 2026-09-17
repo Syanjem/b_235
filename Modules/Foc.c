@@ -32,11 +32,11 @@ void foc_task(void)
 	
 	static uint32_t p_num = 0u;
 	// 2.foc 的不同启动模式
-	switch(motorData.state.foc_begin_mode)
+	switch(motorData.state.focRunningBeginMode)
 	{
 		// ① 上电启动模式：上电直接开始转动
 		// 也是 foc 运行模式（内含 foc pi算法与输出），其他模式启动后，foc 要运行，都要转到这里
-		case FOC_BEGIN_MODE_POWER_UP:
+		case FOC_RUNNING_BEGIN_MODE_POWER_UP:
 		{
 			if (p_num <51000)
 			{
@@ -46,12 +46,12 @@ void foc_task(void)
 			if (can_stop == 1)
 			{
 				can_stop = 0;
-				motorData.state.foc_begin_mode = FOC_BEGIN_MODE_CAN_SIGNAL;
+				motorData.state.focRunningBeginMode = FOC_RUNNING_BEGIN_MODE_CAN_SIGNAL;
 				GPIO_canWait_start();
 			}
 			
 			// foc pi 算法
-			foc_pi_task(motorData.state.foc_control_mode);
+			foc_pi_task(motorData.state.focRunningControlMode);
 
 			
 			v_update(motorData.components.p_v, 
@@ -69,7 +69,7 @@ void foc_task(void)
 
 		// ② adc 触发模式：检测到 adc 的电流变化而启动
 		// dl 拖动电机产生感应电动势，产生感应电流
-		case FOC_BEGIN_MODE_ADC_DETECTION:
+		case FOC_RUNNING_BEGIN_MODE_ADC_DETECTION:
 		{
 			/* 零点 ≈ 2048，偏离 ±40（约 ±0.6A）才认为有真实电流跳变 */
 			if(motorData.components.p_idq->ic_shot < 1908 ||
@@ -77,7 +77,7 @@ void foc_task(void)
 			{
 				if (++adc_trig_cnt >= 3)   /* 连续 3 次（约150us）确认，去抖 */
 				{
-					motorData.state.foc_begin_mode = FOC_BEGIN_MODE_POWER_UP;
+					motorData.state.focRunningBeginMode = FOC_RUNNING_BEGIN_MODE_POWER_UP;
 					GPIO_adcBackRead_end();
 					adc_trig_cnt = 0;
 				}
@@ -90,21 +90,21 @@ void foc_task(void)
 		}
 
 		// ③ can 信号控制模式
-		case FOC_BEGIN_MODE_CAN_SIGNAL:
+		case FOC_RUNNING_BEGIN_MODE_CAN_SIGNAL:
 		{
 //			if (can_ok == 1)
 //			{
-//				motorData.state.foc_begin_mode = FOC_BEGIN_MODE_POWER_UP;
+//				motorData.state.FOC_RUNNING_BEGIN_MODE = FOC_RUNNING_BEGIN_MODE_POWER_UP;
 //				GPIO_canWait_end();
 //			}	
 			break;		
 		}
 		
-		case FOC_BEGIN_MODE_GPIO_EXTI:
+		case FOC_RUNNING_BEGIN_MODE_GPIO_EXTI:
 		{
 			if (exti_foc_ok == 1)
 			{
-				motorData.state.foc_begin_mode = FOC_BEGIN_MODE_POWER_UP;
+				motorData.state.focRunningBeginMode = FOC_RUNNING_BEGIN_MODE_POWER_UP;
 				GPIO_extiWait_end();
 			}	
 			break;		
@@ -150,21 +150,21 @@ void foc_task(void)
 }
 
 
-void foc_pi_task(FOC_CONTROL_MODE fcm)
+void foc_pi_task(FOC_RUNNING_CONTROL_MODE fcm)
 {
 	switch (fcm)
 	{
-		case FOC_CONTROL_MODE_I:
+		case FOC_RUNNING_CONTROL_MODE_I:
 		{
 			foc_1loop_update(motorData.pi.pi3_id_para, motorData.pi.pi3_iq_para, motorData.pi.p_pidata); // 转矩模式
 			break;
 		}
-		case FOC_CONTROL_MODE_SPEED:
+		case FOC_RUNNING_CONTROL_MODE_SPEED:
 		{		
 
 			break;
 		}
-		case FOC_CONTROL_MODE_SPEED_RAMP:
+		case FOC_RUNNING_CONTROL_MODE_SPEED_RAMP:
 		{
 			foc_2loop_update(motorData.pi.pi2_speed_para, motorData.pi.pi3_id_para, motorData.pi.pi3_iq_para, motorData.pi.p_pidata);
 			break;

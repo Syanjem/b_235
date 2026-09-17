@@ -12,9 +12,10 @@ MOTOR_DATA motorData = {
 	},
 	
 	.state = {
-		.state_mode			= STATE_MODE_FocRunning,
-		.foc_begin_mode		= FOC_BEGIN_MODE_POWER_UP,
-		.foc_control_mode	= FOC_CONTROL_MODE_SPEED_RAMP,
+		.stateMode				= STATE_MODE_RUNNING,
+		.focRunningBeginMode	= FOC_RUNNING_BEGIN_MODE_POWER_UP,
+		.focRunningControlMode	= FOC_RUNNING_CONTROL_MODE_SPEED_RAMP,
+		.focFaultState			= FOC_FAULT_STATE_NORMAL,
 	},
 	
 	.pi = {

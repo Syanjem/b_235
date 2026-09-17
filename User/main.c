@@ -21,22 +21,22 @@ int main(void)
 	BSP_Connect_Init();		
 	
 	// 1. 初始化
-	motorData.state.state_mode = STATE_MODE_FocRunning;
-	motorData.state.foc_begin_mode = FOC_BEGIN_MODE_ADC_DETECTION;
-	motorData.state.foc_control_mode = FOC_CONTROL_MODE_SPEED_RAMP;
+	motorData.state.stateMode = STATE_MODE_RUNNING;
+	motorData.state.focRunningBeginMode = FOC_RUNNING_BEGIN_MODE_ADC_DETECTION;
+	motorData.state.focRunningControlMode = FOC_RUNNING_CONTROL_MODE_SPEED_RAMP;
 	
-	switch (motorData.state.foc_control_mode)
+	switch (motorData.state.focRunningControlMode)
 	{
-		case FOC_CONTROL_MODE_I:
+		case FOC_RUNNING_CONTROL_MODE_I:
 		{
 			foc_debug(1, -0.04f, 100, 10);
 			break;
 		}
-		case FOC_CONTROL_MODE_SPEED:
+		case FOC_RUNNING_CONTROL_MODE_SPEED:
 		{
 			break;
 		}
-		case FOC_CONTROL_MODE_SPEED_RAMP:
+		case FOC_RUNNING_CONTROL_MODE_SPEED_RAMP:
 		{
 			foc_debug(2, -2.5f, 100, 10);	// 千度/秒
 			break;
@@ -49,23 +49,23 @@ int main(void)
 //	angleZero_float_get((&angle_s);
 //	delay_1ms(1000);
 	
-	switch (motorData.state.foc_begin_mode)
+	switch (motorData.state.focRunningBeginMode)
 	{
-		case FOC_BEGIN_MODE_POWER_UP: 
+		case FOC_RUNNING_BEGIN_MODE_POWER_UP: 
 		{
 			break;
 		}
-		case FOC_BEGIN_MODE_ADC_DETECTION:
+		case FOC_RUNNING_BEGIN_MODE_ADC_DETECTION:
 		{
 			GPIO_adcBackRead_start();
 			break;
 		}
-		case FOC_BEGIN_MODE_CAN_SIGNAL:
+		case FOC_RUNNING_BEGIN_MODE_CAN_SIGNAL:
 		{
 			GPIO_canWait_start();
 			break;
 		}
-		case FOC_BEGIN_MODE_GPIO_EXTI:
+		case FOC_RUNNING_BEGIN_MODE_GPIO_EXTI:
 		{	
 			GPIO_extiWait_start();
 			break;
