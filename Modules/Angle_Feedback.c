@@ -60,7 +60,6 @@ void Angle_Feedback_Update(Angle_Struct* pa)
 	{
 		pa->angle_ea -= 360.0f;
 	}
-
 }
 
 void Speed_Feedback_Update(Angle_Struct* pa)

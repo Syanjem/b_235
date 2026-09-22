@@ -10,6 +10,8 @@
 // vd,vq 由 adc 获取
 typedef struct
 {
+	float U_Base;
+	
     float v_d;				// 电流环输出
     float v_q;				// 电流环输出
 	float k;				// （暂时由速度环 |vq| / MAX_V 得到）
@@ -33,9 +35,28 @@ typedef struct
     uint16_t duty_c;	// V,ABC输出：由sector,vab,k计算得到
 } ABCpwm_Struct;
 extern ABCpwm_Struct	abc_s;
-void ABCpwm_Struct_init(uint16_t p, uint16_t b, uint16_t e,
-						uint16_t da, uint16_t db, uint16_t dc,
-						ABCpwm_Struct* pd);
+
+
+
+void v_update(V_Struct* pv, float t_vq, float t_vd, float vbus_V, float ea);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 void pwm_output_update(V_Struct* pv, ABCpwm_Struct* pabc);
 void SVPWM_Sector(float alpha, float beta, uint8_t* ps);

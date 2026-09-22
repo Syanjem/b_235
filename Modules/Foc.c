@@ -49,9 +49,10 @@ void foc_task(void)
 			foc_pi_task(motorData.state.focRunningControlMode);
 
 			v_update(motorData.components.p_v, 
-						motorData.components.p_angle, 
-						motorData.components.p_idq, 
-						motorData.pi.p_pidata);
+						motorData.pi.p_pidata->target_vq,
+						motorData.pi.p_pidata->target_vd,
+						motorData.components.p_idq->vbus_V, 
+						motorData.components.p_angle->angle_ea);
 			pwm_output_update(&v_s, &abc_s);
 			
 			break;		
@@ -262,7 +263,7 @@ void foc_feedback_update(Pi_Data_Struct* pd, Angle_Struct* pa, Idq_Struct* pi)
 {	
 	Angle_Feedback_Update(pa);		// 反馈角度
 	Speed_Feedback_Update(pa);		// 反馈速度
-	Idq_Feedback_Update(pi, pa);	// 反馈电流
+	Idq_Feedback_Update(pi, pa->angle_ea);	// 反馈电流
 	
 	PID_Feedback_Update(pd, pa, pi);	// Pi 环反馈输入
 }

@@ -53,17 +53,6 @@ void pi2_speed_loop(Pi_Para_Struct* pid2, Pi_Data_Struct* p_data);
 void pi3_iq_loop(Pi_Para_Struct* pid3q, Pi_Data_Struct* p_data);
 void pi3_id_loop(Pi_Para_Struct* pid3d, Pi_Data_Struct* p_data);
 
-void v_update(V_Struct* pv, Angle_Struct* pa, Idq_Struct* pi, Pi_Data_Struct* p_data);
-
-
-
-
-
-
-
-
-
-void v_update_debug(V_Struct* pv, Angle_Struct* pa, Idq_Struct* pi, Pi_Data_Struct* p_data);
 
 
 

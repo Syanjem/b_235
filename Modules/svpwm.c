@@ -1,6 +1,8 @@
 #include "svpwm.h"
 
 V_Struct v_s = {
+	.U_Base = 24.0f,	// = vbus/2, 相电压峰值基准, SVPWM 线性区匹配
+	
 	.v_d 		= 0.0f,
 	.v_q		= 1.0f,
 	.k 			= 0.5,
@@ -18,6 +20,28 @@ ABCpwm_Struct abc_s = {
 	.duty_b		= 2000,
 	.duty_c		= 2500,
 };
+
+
+// pv 从 pa 获取电角度，计算三角函数
+void v_update(V_Struct* pv, float t_vq, float t_vd, float vbus_V, float ea)
+{
+	pv->v_q = t_vq;	// pu
+	pv->v_d = t_vd;	// pu
+
+	// 调制比 k = sqrt(3) * |Vdq|_pu / Vbus_pu
+	// vdq 是 pu, vbus 也要转 pu, 否则 k 会严重偏小
+	float vdq_mag = sqrtf(pv->v_d * pv->v_d + pv->v_q * pv->v_q);
+	float vbus_pu = vbus_V / pv->U_Base;	// 实际 V / 基准 V = pu
+	if (vbus_pu < 0.1f) vbus_pu = 0.1f;			// 兜底: 防除零
+	pv->k = _SQRT3 * vdq_mag / vbus_pu;
+	if (pv->k > 0.4f) pv->k = 0.4f;		// 过调制限幅
+
+	inverse_park(pv->v_d, pv->v_q, ea * M_PI / 180.0f, &pv->v_alpha, &pv->v_beta);
+}
+
+
+
+
 
 void pwm_output_update(V_Struct* pv, ABCpwm_Struct* pabc)
 {

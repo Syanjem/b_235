@@ -3,7 +3,6 @@
 // get: [id, iq]
 Idq_Struct idq_s = {
 	.I_Base = 33.0f,	// 标幺值范围是 [-1, +1]
-	.U_Base = 24.0f,	// = vbus/2, 相电压峰值基准, SVPWM 线性区匹配
 	
 	.ic_shot	= 0u,
 	.ib_shot	= 0u,
@@ -51,7 +50,7 @@ void i_shot_form_adc0inserted(Idq_Struct* pi)
 
 
 // [ic_raw, ib_raw, ea] to [iq, id]
-void Idq_Feedback_Update(Idq_Struct* pi, Angle_Struct *pa)
+void Idq_Feedback_Update(Idq_Struct* pi, float ea)
 {
 	i_shot_form_adc0inserted(pi);
 	
@@ -66,7 +65,7 @@ void Idq_Feedback_Update(Idq_Struct* pi, Angle_Struct *pa)
 	// clarke 变换，获取 (i_alpha, i_beta) 
 	clarke_transform(pi->ia, pi->ib, &pi->i_alpha, &pi->i_beta);
 	// park 变化，获取 (id, iq)
-	park_transform(pi->i_alpha, pi->i_beta, pa->angle_ea * M_PI / 180.0f, &pi->id, &pi->iq);
+	park_transform(pi->i_alpha, pi->i_beta, ea * M_PI / 180.0f, &pi->id, &pi->iq);
 }
 
 

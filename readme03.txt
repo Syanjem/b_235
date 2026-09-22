@@ -309,6 +309,24 @@ git commit -am "feat: main 上的独立修改"
 
 【09220846】回长沙，改前可用版本
 
+校准：
+ 目前：手动校准
+ 目标：自动校准（方向、极对数）、自动调参
+
+
+
+程序结构：【主函数 - Foc 函数 - 状态机 - 算法层 - （通信口、数据获取、输出）外设/硬件层】
+main - Foc - Motor_ctrl - Angle_Feedback - encoder_spi
+					   |- Idq_Feedback	 - adc
+					   |- pid_3loops
+					   |- swpwm			 - timer
+
+
+
+
+
+
+
 
 
 

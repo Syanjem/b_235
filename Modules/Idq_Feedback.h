@@ -3,16 +3,12 @@
 
 #include "gd32f30x_libopt.h"
 #include "adc.h"
-#include "spi.h"
-
-#include "Angle_Feedback.h"
 
 #include "general_def.h"
 
 typedef struct
 {
 	float I_Base;
-	float U_Base;
 	
 	uint16_t ic_shot;
 	uint16_t ib_shot;
@@ -57,7 +53,7 @@ uint16_t get_filtered(uint16_t raw_adc, Filter_Struct* pfs); // icb_dma_buffer2[
 
 
 
-void Idq_Feedback_Update(Idq_Struct* pi, Angle_Struct *pa);
+void Idq_Feedback_Update(Idq_Struct* pi, float ea);
 
 
 void bubble_sort(uint16_t arr[], uint8_t len);
