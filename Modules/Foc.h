@@ -4,10 +4,6 @@
 #include "gpio.h"
 #include "ATK.h"
 
-#include "Idq_Feedback.h"
-#include "Angle_Feedback.h"
-
-#include "pid_3loops.h"
 
 #include "Motor_ctrl.h"
 

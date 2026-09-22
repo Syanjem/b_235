@@ -315,15 +315,17 @@ git commit -am "feat: main 上的独立修改"
 
 
 
-程序结构：【主函数 - Foc 函数 - 状态机 - 算法层 - （通信口、数据获取、输出）外设/硬件层】
+程序结构：【主函数 - Foc 函数 - 状态机 - 算法层、数据处理 - （通信口、数据获取、输出）外设/硬件层】
 main - Foc - Motor_ctrl - Angle_Feedback - encoder_spi
 					   |- Idq_Feedback	 - adc
 					   |- pid_3loops
 					   |- swpwm			 - timer
 
-
-
-
+以步骤为单元，算法部分作为数据的通道，函数中通道的输入输出可以使用所属通道的结构体，其余参数则使用用基本类型
+ 以数据来源作为通道划分的基本依据。
+ - 角度：encoder,spi
+ - 电流：adc
+ - 电压,占空比: timer
 
 
 
