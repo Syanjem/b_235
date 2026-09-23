@@ -2,14 +2,14 @@
 
 MOTOR_DATA motorData = {
 	.state = {
-		.stateMode					= STATE_MODE_STANDBY,
-		.standby_subMode_start		= START_MODE_ADC,
-		.working_subMode_control	= CONTROL_MODE_SPEED_RAMP,
-		.stateFlag = {
-			.STATE_MODE_SWITCH_FLAG	= STATE_MODE_SWITCH_ON,
-			.ATK_FLAG				= ATK_ON,
-			.STATE_MODE_FLAG		= STATE_MODE_STANDBY,
+		.mode					= STATE_MODE_STANDBY,
+		.request = {
+			.switch_request 	= STATE_MODE_SWITCH_ON,
+			.target_mode		= STATE_MODE_STANDBY,
 		},
+//		.fault
+		.start_mode				= START_MODE_ADC,
+		.control_mode			= CONTROL_MODE_SPEED_RAMP,
 	},
 	
 	.components	= {
@@ -20,43 +20,53 @@ MOTOR_DATA motorData = {
 	},
 	
 	.pi = {
-		.p_pidata 			= &pi_data_s,
-		.pi3_iq_para		= &pi3_iq_para,
-		.pi3_id_para		= &pi3_id_para,
-		.pi2_speed_para		= &pi2_speed_para,
-		.pi1_mangle_para	= &pi1_mangle_para,
+		.p_data 	= &pi_data_s,
+		.p_iq		= &pi3_iq_para,
+		.p_id		= &pi3_id_para,
+		.p_speed	= &pi2_speed_para,
+		.p_mangle	= &pi1_mangle_para,
 	},
+
+	.runtime = {
+		.adc_trig_cnt = 0u,
+		.run_tick	  = 0u,
+		.start_fail_cnt = 0u,
+	},
+
+	.sw = {
+		.atk_enable = ATK_ON,
+	}
 };
 
 
 void motor_state_mode_config_task(void)
 {
-	if(motorData.state.stateFlag.STATE_MODE_SWITCH_FLAG == STATE_MODE_SWITCH_ON)
+	if(motorData.state.request.switch_request == STATE_MODE_SWITCH_ON)
 	{
-		motorData.state.stateFlag.STATE_MODE_SWITCH_FLAG = STATE_MODE_SWITCH_OFF;
-		switch(motorData.state.stateFlag.STATE_MODE_FLAG)
+		motorData.state.request.switch_request = STATE_MODE_SWITCH_OFF;
+		switch(motorData.state.request.target_mode)
 		{
 			case STATE_MODE_STANDBY: 
 			{	
-				motorData.state.stateMode = STATE_MODE_STANDBY;
+				motorData.state.mode = STATE_MODE_STANDBY;
 				motor_standby_config(); 
 				break; 
 			}
 			case STATE_MODE_WORKING: 
 			{	
-				motorData.state.stateMode = STATE_MODE_WORKING;
+				motorData.state.mode = STATE_MODE_WORKING;
 				motor_working_config(); 
 				break; 
 			}
 			case STATE_MODE_STOPPED: 
 			{	
-				motorData.state.stateMode = STATE_MODE_STOPPED;
+				motorData.state.mode = STATE_MODE_STOPPED;
 				motor_stopped_config(); 
 				break; 
 			}
 //			case STATE_MODE_CALIBRATING: 
 //			{	
-//				motorData.state.stateMode = STATE_MODE_CALIBRATING;
+//				motorData.state.mode = STATE_MODE_CALIBRATING;
 //				motor_calibrating_config(); 
 //				break; 
 //			}
@@ -68,7 +78,7 @@ void motor_state_mode_config_task(void)
 
 void motor_standby_config(void)
 {
-	switch (motorData.state.standby_subMode_start)
+	switch (motorData.state.start_mode)
 	{
 		case START_MODE_POWERUP: 
 		{
@@ -95,7 +105,7 @@ void motor_standby_config(void)
 
 void motor_working_config(void)
 {
-	switch (motorData.state.standby_subMode_start)
+	switch (motorData.state.start_mode)
 	{
 		case START_MODE_POWERUP: 
 		{

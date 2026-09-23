@@ -17,6 +17,22 @@ typedef enum
 } STATE_MODE;
 #define STATE_MODE_SWITCH_OFF	0u
 #define STATE_MODE_SWITCH_ON	1u
+/* 状态切换请求: 中断层置位, 主循环消费 */
+typedef struct {
+    uint8_t     switch_request;   // 0=无请求, 1=有请求  (原 STATE_MODE_SWITCH_FLAG)
+    STATE_MODE  target_mode;      // 目标状态            (原 STATE_MODE_FLAG)
+} STATE_REQUEST;
+
+/* 故障码 (恢复被注释的 FAULT_STATE) */
+typedef enum {
+    FAULT_NONE = 0,             // 无故障
+    FAULT_OVER_CURRENT,         // 过流
+    FAULT_OVER_VOLTAGE,         // 过压
+    FAULT_UNDER_VOLTAGE,        // 欠压
+    FAULT_OVER_TEMPERATURE,     // 过温
+    FAULT_OVER_SPEED,           // 超速
+    FAULT_START_FAIL,           // 启动失败 (原 iq16_up 触发的场景)
+} FAULT_STATE;
 
 /* 子模式 启动方式 */
 typedef enum
@@ -26,7 +42,6 @@ typedef enum
     START_MODE_CAN,     	/* CAN信号启动: 等上位机CAN命令(0x101)触发can_ok      */
     START_MODE_EXTI,     	/* GPIO外部中断启动: 等PB8/PB9下降沿触发(预留)         */
 } SUB_MODE_START;
-
 
 /* 子模式 工作模式 */
 typedef enum
@@ -51,22 +66,14 @@ typedef enum
 //{
 //} DEBUG_SUB_MODE
 
-#define ATK_OFF		0u
-#define ATK_ON		1u
-typedef struct
-{
-	uint8_t 	STATE_MODE_SWITCH_FLAG;
-	uint8_t		ATK_FLAG;
-	STATE_MODE	STATE_MODE_FLAG;
-} STATE_FLAG;
 
-typedef struct
-{
-    STATE_MODE          stateMode;				
-    SUB_MODE_START      standby_subMode_start;	
-	SUB_MODE_CONTROL	working_subMode_control;
-//	STOPPED_SUB_MODE
-	STATE_FLAG			stateFlag;
+/* 状态层 */
+typedef struct {
+    STATE_MODE        mode;            // 当前状态      (原 stateMode)
+    STATE_REQUEST     request;         // 切换请求      (原 stateFlag 的部分)
+//    FAULT_STATE       fault;           // 故障码 (新增)
+    SUB_MODE_START    start_mode;      // 待机子模式    (原 standby_subMode_start)
+    SUB_MODE_CONTROL  control_mode;    // 工作子模式    (原 working_subMode_control)
 } MOTOR_STATE;
 
 typedef struct
@@ -75,22 +82,39 @@ typedef struct
     Idq_Struct*     p_idq;      /* 电流反馈: ADC→ia/ib/ic→Clarke→Park→id/iq, 含母线电压  */
     V_Struct*       p_v;        /* 电压输出: vd/vq→逆Park→v_alpha/v_beta→调制比k        */
     ABCpwm_Struct*  p_abcpwm;   /* PWM输出: duty_a/b/c (0~period), 写TIMER0 CCR寄存器     */
-} MOTOR_COMPIONENTS;
+} MOTOR_COMPONENTS;
 
-typedef struct
-{
-    Pi_Data_Struct* p_pidata;       /* PI数据: target/feedback/id/iq/vd/vq 等运行时数据      */
-    Pi_Para_Struct* pi3_iq_para;    /* q轴电流环: Kp/Ki/integral/限幅, 输出 vq              */
-    Pi_Para_Struct* pi3_id_para;    /* d轴电流环: Kp/Ki/integral/限幅, 输出 vd              */
-    Pi_Para_Struct* pi2_speed_para; /* 速度环: Kp/Ki/integral/限幅, 输出 target_iq          */
-    Pi_Para_Struct* pi1_mangle_para;/* 位置环: Kp/Ki/integral/限幅, 输出 target_speed       */
-} MOTOR_PI_PARA;
+typedef struct {
+    Pi_Data_Struct*   p_data;        // 运行时数据 (原 p_pidata)
+    Pi_Para_Struct*   p_mangle;      // 位置环     (原 pi1_mangle_para)
+    Pi_Para_Struct*   p_speed;       // 速度环     (原 pi2_speed_para)
+    Pi_Para_Struct*   p_iq;          // q轴电流环  (原 pi3_iq_para)
+    Pi_Para_Struct*   p_id;          // d轴电流环  (原 pi3_id_para)
+} MOTOR_PI;
 
-typedef struct
-{
-    MOTOR_STATE        state;       /* ② 状态层: 全局状态 + 运行子模式                     */
-    MOTOR_COMPIONENTS  components;  /* ① 组件层: 角度/电流/电压/PWM 四个数据源指针          */
-    MOTOR_PI_PARA      pi;          /* ③ 控制层: 三环PI参数指针集合                        */
+
+#define ATK_OFF		0u
+#define ATK_ON		1u
+/* 调试/功能开关 (原 STATE_FLAG 里的 ATK_FLAG 拆出来) */
+typedef struct {
+    uint8_t     atk_enable;        // ATK 调试发送开关
+    // 后续可加: debug_enable, log_enable 等
+} MOTOR_SWITCH;
+
+/* 运行时数据 (原散落在 Foc.c 的 static 变量) */
+typedef struct {
+    uint32_t    run_tick;          // 运行周期计数 (原 p_num)
+    uint8_t     start_fail_cnt;    // 启动失败计数 (原 iq16_up)
+    uint8_t     adc_trig_cnt;      // ADC 触发去抖计数
+} MOTOR_RUNTIME;
+
+/* 顶层 */
+typedef struct {
+    MOTOR_STATE       state;
+    MOTOR_COMPONENTS  components;
+    MOTOR_PI          pi;
+    MOTOR_RUNTIME      runtime;       // 新增
+    MOTOR_SWITCH       sw;            // 新增
 } MOTOR_DATA;
 extern MOTOR_DATA motorData;
 
@@ -128,15 +152,7 @@ void motor_stopped_config(void);
 
 
 
-//typedef enum
-//{
-//    FOC_FAULT_STATE_NORMAL			= 0,  /* 正常: 无故障                                     */
-//    FOC_FAULT_STATE_OVER_CURRENT,         /* 过流: ia/ib/ic 任一相超过 ±1.0pu (±33A)           */
-//    FOC_FAULT_STATE_OVER_VOLTAGE,         /* 过压: vbus_V ≥ 上限 (如 28V)                      */
-//    FOC_FAULT_STATE_UNDER_VOLTAGE,        /* 欠压: vbus_V ≤ 下限 (如 18V), 母线跌落           */
-//    FOC_FAULT_STATE_OVER_TEMPERATURE,     /* 过温: NTC/MB1601B 读数 ≥ 阈值 (如 80°C)           */
-//    FOC_FAULT_STATE_SPEEDING,             /* 超速: speed 超过 ±1.0pu (额定转速)                */
-//} FOC_FAULT_STATE;
+
 
 //typedef enum
 //{
