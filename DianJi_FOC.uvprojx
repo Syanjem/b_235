@@ -411,11 +411,6 @@
               <FilePath>.\data.txt</FilePath>
             </File>
             <File>
-              <FileName>part.txt</FileName>
-              <FileType>5</FileType>
-              <FilePath>.\part.txt</FilePath>
-            </File>
-            <File>
               <FileName>readme03.txt</FileName>
               <FileType>5</FileType>
               <FilePath>.\readme03.txt</FilePath>

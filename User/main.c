@@ -22,6 +22,8 @@ int main(void)
 	motorData.state.stateMode 				= STATE_MODE_STANDBY;
 	motorData.state.standby_subMode_start 	= START_MODE_ADC;
 	motorData.state.working_subMode_control = CONTROL_MODE_SPEED_RAMP;
+	motorData.state.stateFlag.STATE_MODE_SWITCH_FLAG = STATE_MODE_SWITCH_ON;
+	motorData.state.stateFlag.STATE_MODE_FLAG = STATE_MODE_STANDBY;
 	
 	switch (motorData.state.working_subMode_control)
 	{
@@ -47,18 +49,20 @@ int main(void)
 //	angleZero_float_get((&angle_s);
 //	delay_1ms(1000);
 	
-	foc_standby_task();
-	
 	BSP_timerTrigger_adcDetect_Enable();	// 使能 adc0, timer0
 	
 	
 	while(1)
 	{
 		
-		foc_switch_state_task();
+		motor_state_mode_config_task();
 		
 		
-
+		
+		
+		
+		
+		
 
 	}
 }

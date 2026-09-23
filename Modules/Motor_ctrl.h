@@ -1,6 +1,8 @@
 #ifndef _MOTOR_CTRL_H_
 #define _MOTOR_CTRL_H_
 
+#include "BSP.h"
+
 #include "Angle_Feedback.h"
 #include "Idq_Feedback.h"
 #include "pid_3loops.h"
@@ -13,7 +15,8 @@ typedef enum
 	STATE_MODE_STOPPED,		// 停机模式
 	STATE_MODE_CALIBRATING,	// 校准模式
 } STATE_MODE;
-
+#define STATE_MODE_SWITCH_OFF	0u
+#define STATE_MODE_SWITCH_ON	1u
 
 /* 1.待机，子模式 */
 // 启动方式
@@ -24,13 +27,6 @@ typedef enum
     START_MODE_CAN,     	/* CAN信号启动: 等上位机CAN命令(0x101)触发can_ok      */
     START_MODE_EXTI,     /* GPIO外部中断启动: 等PB8/PB9下降沿触发(预留)         */
 } STANDBY_SUB_MODE_START;
-
-#define START_ADC_OFF	0u
-#define START_ADC_ON	1u
-#define START_CAN_OFF	0u
-#define START_CAN_ON	1u
-#define START_EXTI_OFF	0u
-#define START_EXTI_ON	1u
 
 
 /* 2.工作，子模式 */
@@ -59,9 +55,8 @@ typedef enum
 
 typedef struct
 {
-	uint8_t	START_ADC_FLAG;
-	uint8_t	START_CAN_FLAG;
-	uint8_t	START_EXTI_FLAG;
+	uint8_t 	STATE_MODE_SWITCH_FLAG;
+	STATE_MODE	STATE_MODE_FLAG;
 } STATE_FLAG;
 
 typedef struct
@@ -97,6 +92,34 @@ typedef struct
     MOTOR_PI_PARA      pi;          /* ③ 控制层: 三环PI参数指针集合                        */
 } MOTOR_DATA;
 extern MOTOR_DATA motorData;
+
+
+
+void motor_state_mode_config_task(void);
+void motor_standby_config(void);
+void motor_working_config(void);
+void motor_stopped_config(void);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -37,7 +37,6 @@ void foc_task(void)
 			{
 				case START_MODE_POWERUP:
 				{
-					motorData.state.stateMode = STATE_MODE_WORKING;
 					break;
 				}
 				case START_MODE_ADC:
@@ -50,7 +49,8 @@ void foc_task(void)
 						adc_trig_cnt++;
 						if (adc_trig_cnt >= 3)   /* 连续 3 次（约150us）确认，去抖 */
 						{
-							motorData.state.stateFlag.START_ADC_FLAG = START_ADC_ON;
+							motorData.state.stateFlag.STATE_MODE_SWITCH_FLAG = STATE_MODE_SWITCH_ON;
+							motorData.state.stateFlag.STATE_MODE_FLAG = STATE_MODE_WORKING;
 							adc_trig_cnt = 0;
 						}
 					}
@@ -64,7 +64,8 @@ void foc_task(void)
 				{
 		//			if (can_ok == 1)
 		//			{
-		//				motorData.state.stateFlag.START_CAN_FLAG = START_CAN_ON;
+//						motorData.state.stateFlag.STATE_MODE_SWITCH_FLAG = STATE_MODE_SWITCH_ON;
+//						motorData.state.stateFlag.STATE_MODE_FLAG = STATE_MODE_WORKING;
 		//				GPIO_canWait_end();
 		//			}	
 					break;		
@@ -73,7 +74,8 @@ void foc_task(void)
 				{
 					if (exti_foc_ok == 1)
 					{
-						motorData.state.stateFlag.START_EXTI_FLAG = START_EXTI_ON;
+						motorData.state.stateFlag.STATE_MODE_SWITCH_FLAG = STATE_MODE_SWITCH_ON;
+						motorData.state.stateFlag.STATE_MODE_FLAG = STATE_MODE_WORKING;
 						exti_foc_ok = 0;
 					}	
 					break;		
@@ -143,87 +145,14 @@ void foc_task(void)
 	}
 	if (iq16_up >=5)
 	{
-		motorData.state.stateMode = STATE_MODE_STOPPED;
+		motorData.state.stateFlag.STATE_MODE_SWITCH_FLAG = STATE_MODE_SWITCH_ON;
+		motorData.state.stateFlag.STATE_MODE_FLAG = STATE_MODE_STOPPED;
 	}
-	
-	
-	
-
 	
 
 }
 
 
-void foc_standby_task(void)
-{
-	switch (motorData.state.standby_subMode_start)
-	{
-		case START_MODE_POWERUP: 
-		{
-			break;
-		}
-		case START_MODE_ADC:
-		{
-			motorData.state.stateFlag.START_ADC_FLAG = START_ADC_OFF;
-			GPIO_adcBackDetect_in();
-			break;
-		}
-		case START_MODE_CAN:
-		{
-			motorData.state.stateFlag.START_CAN_FLAG = START_CAN_OFF;
-			GPIO_canWait_start();
-			break;
-		}
-		case START_MODE_EXTI:
-		{	
-			motorData.state.stateFlag.START_EXTI_FLAG = START_EXTI_OFF;
-			GPIO_extiWait_start();
-			break;
-		}
-	}
-}
-
-void foc_switch_state_task(void)
-{
-	switch (motorData.state.standby_subMode_start)
-	{
-		case START_MODE_ADC: 
-		{
-			if (motorData.state.stateFlag.START_ADC_FLAG == START_ADC_ON)
-    		{
-				motorData.state.stateFlag.START_ADC_FLAG	= START_ADC_OFF;
-				__disable_irq();
-				motorData.state.stateMode 					= STATE_MODE_WORKING;
-				GPIO_adcBackDetect_out();
-				__enable_irq();	
-			}
-			break;			
-		}
-		case START_MODE_CAN:	break;
-		case START_MODE_EXTI:
-		{
-			if (motorData.state.stateFlag.START_EXTI_FLAG == START_EXTI_ON)
-    		{
-				motorData.state.stateFlag.START_EXTI_FLAG	= START_EXTI_OFF;
-				__disable_irq();
-				motorData.state.stateMode 					= STATE_MODE_WORKING;
-				GPIO_extiWait_end();
-				__enable_irq();	
-			}
-			break;		
-		}
-		default:				break;
-	}
-	
-	if(motorData.state.stateMode == STATE_MODE_STOPPED)
-	{
-			__disable_irq();
-			GPIO_adcBackDetect_in();
-			adc_disable(ADC0);
-			timer_disable(TIMER0);
-	}
-	
-}
 
 
 
