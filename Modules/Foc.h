@@ -7,12 +7,8 @@
 
 #include "Motor_ctrl.h"
 
-extern uint16_t ma_test;
-
-extern volatile uint16_t ATK_data;
 
 extern volatile uint8_t foc_mode;
-extern volatile uint16_t num_send;
 void ADC0_1_IRQHandler(void);
 
 void foc_standby_task(void);

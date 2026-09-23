@@ -1,13 +1,10 @@
 #include "Foc.h"
 
-uint16_t ma_test = 0u;
 
-volatile uint16_t ATK_data = 0u;
 
 volatile uint8_t foc_mode = 1;
 volatile float foc_target_set = 0.0f;
 volatile uint8_t can_stop = 0;
-volatile uint16_t num_send = 0;
 
 void ADC0_1_IRQHandler(void)
 {
