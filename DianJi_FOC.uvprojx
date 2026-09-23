@@ -711,11 +711,6 @@
           <GroupName>Monitor</GroupName>
           <Files>
             <File>
-              <FileName>MONITOR_MODE.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\Monitor\MONITOR_MODE.c</FilePath>
-            </File>
-            <File>
               <FileName>Temperature_monitor.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\Monitor\Temperature_monitor.c</FilePath>
