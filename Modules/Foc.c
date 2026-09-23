@@ -28,25 +28,75 @@ void foc_task(void)
 	
 	static uint32_t p_num = 0u;
 	
-	// 2.foc 的不同启动模式
-	switch(motorData.state.focRunningState)
+	switch (motorData.state.stateMode)
 	{
-		case FOC_RUNNING_STATE_RUNNING_LOOP:
+		case STATE_MODE_STANDBY:   // 待机: 才走启动检测
+		{
+			// 2.foc 的不同启动模式
+			switch(motorData.state.standby_subMode_start)
+			{
+				case START_MODE_POWERUP:
+				{
+					motorData.state.stateMode = STATE_MODE_WORKING;
+					break;
+				}
+				case START_MODE_ADC:
+				{
+					static uint8_t adc_trig_cnt = 0;
+					
+					/* 零点 ≈ 2048，偏离 ±40（约 ±0.6A）才认为有真实电流跳变 */
+					if(motorData.components.p_idq->ic_shot < 1908 || motorData.components.p_idq->ic_shot > 2188)
+					{
+						adc_trig_cnt++;
+						if (adc_trig_cnt >= 3)   /* 连续 3 次（约150us）确认，去抖 */
+						{
+							motorData.state.stateFlag.START_ADC_FLAG = START_ADC_ON;
+							adc_trig_cnt = 0;
+						}
+					}
+					else
+					{
+						adc_trig_cnt = 0;         /* 一旦回到零点窗口，计数清零 */
+					}
+					break;		
+				}
+				case START_MODE_CAN:
+				{
+		//			if (can_ok == 1)
+		//			{
+		//				motorData.state.stateFlag.START_CAN_FLAG = START_CAN_ON;
+		//				GPIO_canWait_end();
+		//			}	
+					break;		
+				}
+				case START_MODE_EXTI:
+				{
+					if (exti_foc_ok == 1)
+					{
+						motorData.state.stateFlag.START_EXTI_FLAG = START_EXTI_ON;
+						exti_foc_ok = 0;
+					}	
+					break;		
+				}
+			}
+			break;
+		}
+		case STATE_MODE_WORKING:   // 工作: 直接跑 PI
 		{
 			if (p_num <51000)
 			{
 				p_num++;
 			}
-			/* CAN 停止命令: 切回 CAN_SIGNAL 待机, 重新配 EXTI 等下次启动 */
-			if (can_stop == 1)
-			{
-				can_stop = 0;
-				motorData.state.focRunningBeginMode = FOC_RUNNING_BEGIN_MODE_CAN_SIGNAL;
-				GPIO_canWait_start();
-			}
+//			/* CAN 停止命令: 切回 CAN_SIGNAL 待机, 重新配 EXTI 等下次启动 */
+//			if (can_stop == 1)
+//			{
+//				can_stop = 0;
+//				motorData.state.focRunningBeginMode = FOC_RUNNING_BEGIN_MODE_CAN_SIGNAL;
+//				GPIO_canWait_start();
+//			}
 			
 			// foc pi 算法
-			foc_pi_task(motorData.state.focRunningControlMode);
+			foc_pi_task(motorData.state.working_subMode_control);
 
 			v_update(motorData.components.p_v, 
 						motorData.pi.p_pidata->target_vq,
@@ -54,51 +104,12 @@ void foc_task(void)
 						motorData.components.p_idq->vbus_V, 
 						motorData.components.p_angle->angle_ea);
 			pwm_output_update(&v_s, &abc_s);
-			
-			break;		
-		}
-
-		case FOC_RUNNING_STATE_ADC_DETECTION_LOOP:
-		{
-			static uint8_t adc_trig_cnt = 0;
-			
-			/* 零点 ≈ 2048，偏离 ±40（约 ±0.6A）才认为有真实电流跳变 */
-			if(motorData.components.p_idq->ic_shot < 1908 || motorData.components.p_idq->ic_shot > 2188)
-			{
-				adc_trig_cnt++;
-				if (adc_trig_cnt >= 3)   /* 连续 3 次（约150us）确认，去抖 */
-				{
-					motorData.state.focSwitchState = FOC_SWITCH_STATE_ADC_DETECTION_OUT;
-					adc_trig_cnt = 0;
-				}
-			}
-			else
-			{
-				adc_trig_cnt = 0;         /* 一旦回到零点窗口，计数清零 */
-			}
-			break;		
-		}
-
-		case FOC_RUNNING_STATE_CAN_SIGNAL_LOOP:
-		{
-//			if (can_ok == 1)
-//			{
-//				motorData.state.FOC_RUNNING_BEGIN_MODE = FOC_RUNNING_BEGIN_MODE_POWER_UP;
-//				GPIO_canWait_end();
-//			}	
-			break;		
-		}
-		
-		case FOC_RUNNING_STATE_GPIO_EXTI_LOOP:
-		{
-			if (exti_foc_ok == 1)
-			{
-				motorData.state.focSwitchState = FOC_SWITCH_STATE_GPIO_EXTI_OUT;
-			}	
-			break;		
+			break;
 		}
 
 	}
+
+
 	
 	// ATK
 	static uint16_t iq16 = 0u;
@@ -132,100 +143,105 @@ void foc_task(void)
 	}
 	if (iq16_up >=5)
 	{
-		motorData.state.focSwitchState = FOC_SWITCH_STATE_STOP;
+		motorData.state.stateMode = STATE_MODE_STOPPED;
 	}
+	
+	
+	
+
+	
 
 }
 
 
-void foc_begin_mode_choose_task(void)
+void foc_standby_task(void)
 {
-	switch (motorData.state.focRunningBeginMode)
+	switch (motorData.state.standby_subMode_start)
 	{
-		case FOC_RUNNING_BEGIN_MODE_POWER_UP: 
+		case START_MODE_POWERUP: 
 		{
-			motorData.state.focInState = FOC_IN_STATE_OFF;
-			motorData.state.focRunningState = FOC_RUNNING_STATE_RUNNING_LOOP;
 			break;
 		}
-		case FOC_RUNNING_BEGIN_MODE_ADC_DETECTION:
+		case START_MODE_ADC:
 		{
-			motorData.state.focInState = FOC_IN_STATE_ADC_DETECTION_IN;
-			motorData.state.focRunningState = FOC_RUNNING_STATE_ADC_DETECTION_LOOP;
+			motorData.state.stateFlag.START_ADC_FLAG = START_ADC_OFF;
 			GPIO_adcBackDetect_in();
 			break;
 		}
-		case FOC_RUNNING_BEGIN_MODE_CAN_SIGNAL:
+		case START_MODE_CAN:
 		{
-			motorData.state.focInState = FOC_IN_STATE_CAN_SIGNAL_IN;
-			motorData.state.focRunningState = FOC_RUNNING_STATE_CAN_SIGNAL_LOOP;
+			motorData.state.stateFlag.START_CAN_FLAG = START_CAN_OFF;
 			GPIO_canWait_start();
 			break;
 		}
-		case FOC_RUNNING_BEGIN_MODE_GPIO_EXTI:
+		case START_MODE_EXTI:
 		{	
-			motorData.state.focInState = FOC_IN_STATE_GPIO_EXTI_IN;
-			motorData.state.focRunningState = FOC_RUNNING_STATE_GPIO_EXTI_LOOP;
+			motorData.state.stateFlag.START_EXTI_FLAG = START_EXTI_OFF;
 			GPIO_extiWait_start();
 			break;
 		}
 	}
 }
 
-void foc_switch_mode_task(void)
+void foc_switch_state_task(void)
 {
-	switch (motorData.state.focSwitchState)
+	switch (motorData.state.standby_subMode_start)
 	{
-		case FOC_SWITCH_STATE_ADC_DETECTION_OUT: 
+		case START_MODE_ADC: 
 		{
-			motorData.state.focSwitchState		= FOC_SWITCH_STATE_OFF;
-			__disable_irq();
-			motorData.state.focRunningState = FOC_RUNNING_STATE_RUNNING_LOOP;
-			GPIO_adcBackDetect_out();
-			__enable_irq();	
+			if (motorData.state.stateFlag.START_ADC_FLAG == START_ADC_ON)
+    		{
+				motorData.state.stateFlag.START_ADC_FLAG	= START_ADC_OFF;
+				__disable_irq();
+				motorData.state.stateMode 					= STATE_MODE_WORKING;
+				GPIO_adcBackDetect_out();
+				__enable_irq();	
+			}
 			break;			
 		}
-		case FOC_SWITCH_STATE_CAN_SIGNAL_OUT:	break;
-		case FOC_SWITCH_STATE_GPIO_EXTI_OUT:
+		case START_MODE_CAN:	break;
+		case START_MODE_EXTI:
 		{
-			motorData.state.focSwitchState		= FOC_SWITCH_STATE_OFF;
-			__disable_irq();
-			motorData.state.focRunningState = FOC_RUNNING_STATE_RUNNING_LOOP;
-			GPIO_extiWait_end();
-			__enable_irq();	
+			if (motorData.state.stateFlag.START_EXTI_FLAG == START_EXTI_ON)
+    		{
+				motorData.state.stateFlag.START_EXTI_FLAG	= START_EXTI_OFF;
+				__disable_irq();
+				motorData.state.stateMode 					= STATE_MODE_WORKING;
+				GPIO_extiWait_end();
+				__enable_irq();	
+			}
 			break;		
 		}
-		
-		case FOC_SWITCH_STATE_STOP:
-		{
-			motorData.state.focSwitchState		= FOC_SWITCH_STATE_OFF;
+		default:				break;
+	}
+	
+	if(motorData.state.stateMode == STATE_MODE_STOPPED)
+	{
 			__disable_irq();
 			GPIO_adcBackDetect_in();
 			adc_disable(ADC0);
 			timer_disable(TIMER0);
-			break;
-		}
-		case FOC_SWITCH_STATE_OFF:	break;
 	}
+	
 }
 
 
 
-void foc_pi_task(FOC_RUNNING_CONTROL_MODE fcm)
+void foc_pi_task(WORKING_SUB_MODE_CONTROL fcm)
 {
 	switch (fcm)
 	{
-		case FOC_RUNNING_CONTROL_MODE_I:
+		case CONTROL_MODE_I:
 		{
 			foc_1loop_update(motorData.pi.pi3_id_para, motorData.pi.pi3_iq_para, motorData.pi.p_pidata); // 转矩模式
 			break;
 		}
-		case FOC_RUNNING_CONTROL_MODE_SPEED:
+		case CONTROL_MODE_SPEED:
 		{		
 
 			break;
 		}
-		case FOC_RUNNING_CONTROL_MODE_SPEED_RAMP:
+		case CONTROL_MODE_SPEED_RAMP:
 		{
 			foc_2loop_update(motorData.pi.pi2_speed_para, motorData.pi.pi3_id_para, motorData.pi.pi3_iq_para, motorData.pi.p_pidata);
 			break;

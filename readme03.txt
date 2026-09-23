@@ -329,10 +329,23 @@ main - Foc - Motor_ctrl - Angle_Feedback - encoder_spi
 
 
 
+状态一层：
+ 校准模式 //
+ 自检模式 //
+ 待机模式 STANDBY
+ 辅助模式 WORKING（默认为START_ADC）
+ 停机模式 STOPPED
+ 
 
-
-
-
+待机模式：
+周期/不切换状态：
+ 采集电流
+ 采集温度
+ 状态监测
+条件/切换状态：
+ 温控
+ 故障判别
+ 
 
 
 

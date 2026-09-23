@@ -20,36 +20,12 @@ void ADC0_1_IRQHandler(void);
 void foc_task(void);
 
 
-void foc_begin_mode_choose_task(void);
-void foc_switch_mode_task(void);
+void foc_standby_task(void);
+void foc_switch_state_task(void);
 
 
 
-
-
-
-
-
-
-
-
-void foc_pi_task(FOC_RUNNING_CONTROL_MODE fcm);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+void foc_pi_task(WORKING_SUB_MODE_CONTROL fcm);
 
 
 

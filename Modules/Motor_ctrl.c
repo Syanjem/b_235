@@ -4,21 +4,22 @@
 
 
 MOTOR_DATA motorData = {
+	.state = {
+		.stateMode					= STATE_MODE_STANDBY,
+		.standby_subMode_start		= START_MODE_ADC,
+		.working_subMode_control	= CONTROL_MODE_SPEED_RAMP,
+		.stateFlag = {
+			.START_ADC_FLAG = START_ADC_OFF,
+			.START_CAN_FLAG = START_CAN_OFF,
+			.START_EXTI_FLAG	= START_EXTI_OFF,
+		},
+	},
+	
 	.components	= {
 		.p_angle  = &angle_s,
 		.p_idq	  = &idq_s,
 		.p_v	  = &v_s,
 		.p_abcpwm = &abc_s,
-	},
-	
-	.state = {
-		.stateMode				= STATE_MODE_RUNNING,
-		.focRunningBeginMode	= FOC_RUNNING_BEGIN_MODE_POWER_UP,
-		.focRunningState		= FOC_RUNNING_STATE_RUNNING_LOOP,
-		.focInState				= FOC_IN_STATE_OFF,
-		.focSwitchState			= FOC_SWITCH_STATE_OFF,
-		.focRunningControlMode	= FOC_RUNNING_CONTROL_MODE_SPEED_RAMP,
-		.focFaultState			= FOC_FAULT_STATE_NORMAL,
 	},
 	
 	.pi = {
@@ -32,44 +33,6 @@ MOTOR_DATA motorData = {
 
 
 
-
-
-void MotorStateTask(MOTOR_DATA *motor)
-{
-//    switch (motor->state.state_mode)
-//    {
-//    case STATE_MODE_Init:	// 空闲模式
-//        PID_clear(&motor->IqPID);
-//        PID_clear(&motor->IdPID);
-//        PID_clear(&motor->VelPID);
-//        PID_clear(&motor->PosPID);
-//        FOC_reset(motor->components.foc);
-//        Foc_Pwm_LowSides();
-//        motor->state.State_Mode = STATE_MODE_DETECTING;
-//        motor->state.Sub_State  = CURRENT_CALIBRATING;
-//        break;
-//    case STATE_MODE_JiaoZhun: // 电机矫正模式
-//        MotorInitializeTask(motor);
-//        break;
-//    case STATE_MODE_JianCe: // 运行模式
-//        MotorControlTask(motor);
-//        break;
-//    case STATE_MODE_Foc: // 守护模式
-//        PID_clear(&motor->IqPID);
-//        PID_clear(&motor->IdPID);
-//        PID_clear(&motor->VelPID);
-//        PID_clear(&motor->PosPID);
-//        FOC_reset(motor->components.foc);
-//        Foc_Pwm_LowSides();
-//        break;
-//    case STATE_MODE_Fault: // 电机矫正模式
-//        MotorInitializeTask(motor);
-//        break;
-//    case STATE_MODE_DEBUG: // 电机矫正模式
-//        MotorInitializeTask(motor);
-//        break;
-//    }
-}
 
 
 
