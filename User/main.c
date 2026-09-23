@@ -22,6 +22,8 @@ int main(void)
 	motorData.state.stateMode 				= STATE_MODE_STANDBY;
 	motorData.state.standby_subMode_start 	= START_MODE_ADC;
 	motorData.state.working_subMode_control = CONTROL_MODE_SPEED_RAMP;
+	
+	// 2. 进入待机模式
 	motorData.state.stateFlag.STATE_MODE_SWITCH_FLAG = STATE_MODE_SWITCH_ON;
 	motorData.state.stateFlag.STATE_MODE_FLAG = STATE_MODE_STANDBY;
 	
@@ -56,12 +58,6 @@ int main(void)
 	{
 		
 		motor_state_mode_config_task();
-		
-		
-		
-		
-		
-		
 		
 
 	}
