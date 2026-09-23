@@ -37,6 +37,8 @@ void foc_task(void)
 			{
 				case START_MODE_POWERUP:
 				{
+					motorData.state.stateFlag.STATE_MODE_SWITCH_FLAG = STATE_MODE_SWITCH_ON;
+					motorData.state.stateFlag.STATE_MODE_FLAG = STATE_MODE_WORKING;
 					break;
 				}
 				case START_MODE_ADC:
@@ -142,7 +144,7 @@ void foc_task(void)
 	if (iq16 <= 25000 && p_num >= 50000)
 	{
 		iq16_up ++;	
-	}
+	} else { iq16_up = 0; }
 	if (iq16_up >=5)
 	{
 		motorData.state.stateFlag.STATE_MODE_SWITCH_FLAG = STATE_MODE_SWITCH_ON;
