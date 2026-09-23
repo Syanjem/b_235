@@ -348,6 +348,51 @@ main - Foc - Motor_ctrl - Angle_Feedback - encoder_spi
  
 
 
+四个模式：配置(while(1){}) + 工作(ADC0_1_IRQHandler(){})
+ 待机模式
+ 运行模式
+ 停机模式
+ 校准模式
+
+配置：
+ if(mode_switch == switch_on)
+ {
+	mode_switch = switch_off;
+	switch(mode_state)
+	{
+		case STANDBY: {}
+		case WORKING: {}
+		case STOPPED: {}
+		case JIAOZHUN: {}
+	}
+ }
+
+工作：
+switch(mode_state)
+{
+	case STANDBY: {}
+	case WORKING: {}
+	case STOPPED: {}
+	case JIAOZHUN: {}
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

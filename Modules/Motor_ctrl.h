@@ -12,7 +12,6 @@ typedef enum
     STATE_MODE_WORKING,	  	// 工作模式
 	STATE_MODE_STOPPED,		// 停机模式
 	STATE_MODE_CALIBRATING,	// 校准模式
-    STATE_MODE_DEBUG,     	// 调试
 } STATE_MODE;
 
 
