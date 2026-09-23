@@ -160,26 +160,24 @@ void atk_task(void)
 
 void over_i_stop_task(void)
 {
-	static uint32_t p_num = 0u;
-	if (p_num <51000)
+	if (motorData.runtime.stop_delay_num <51000)
 	{
-		p_num++;
+		motorData.runtime.stop_delay_num++;
 	}
 	
 	float q = CLAMP(motorData.components.p_idq->iq, -1.0f, 1.0f);
 	uint16_t iq_stop = (uint16_t)((q + 1.0f) * 32767.5f);
 	
-	static uint8_t iq16_up = 0u;
-	if (iq_stop <= 25000 && p_num >= 50000)
+	if (iq_stop <= 25000 && motorData.runtime.stop_delay_num >= 50000)
 	{
-		iq16_up ++;	
+		motorData.runtime.iq16_up ++;	
 	} 
 	else 
 	{ 
-		iq16_up = 0; 
+		motorData.runtime.iq16_up = 0; 
 	}
 	
-	if (iq16_up >=5)
+	if (motorData.runtime.iq16_up >=5)
 	{
 		motorData.state.request.switch_request = STATE_MODE_SWITCH_ON;
 		motorData.state.request.target_mode = STATE_MODE_STOPPED;

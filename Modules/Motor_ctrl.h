@@ -103,9 +103,9 @@ typedef struct {
 
 /* 运行时数据 (原散落在 Foc.c 的 static 变量) */
 typedef struct {
-    uint32_t    run_tick;          // 运行周期计数 (原 p_num)
-    uint8_t     start_fail_cnt;    // 启动失败计数 (原 iq16_up)
-    uint8_t     adc_trig_cnt;      // ADC 触发去抖计数
+    uint32_t    stop_delay_num;        // 运行周期计数 (原 p_num)
+    uint16_t     iq16_up;             // 过流计数 (原 iq16_up)
+    uint16_t     adc_trig_cnt;      // ADC 触发去抖计数
 } MOTOR_RUNTIME;
 
 /* 顶层 */

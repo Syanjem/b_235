@@ -21,7 +21,7 @@ int main(void)
 	// 1. 初始化
 	motorData.state.mode 				= STATE_MODE_STANDBY;
 	motorData.state.start_mode		 	= START_MODE_ADC;
-	motorData.state.control_mode		+= CONTROL_MODE_SPEED_RAMP;
+	motorData.state.control_mode		= CONTROL_MODE_SPEED_RAMP;
 	
 	// 2. 进入待机模式
 	motorData.state.request.switch_request = STATE_MODE_SWITCH_ON;

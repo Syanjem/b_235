@@ -28,9 +28,9 @@ MOTOR_DATA motorData = {
 	},
 
 	.runtime = {
+		.stop_delay_num = 0u,
+		.iq16_up	  = 0u,
 		.adc_trig_cnt = 0u,
-		.run_tick	  = 0u,
-		.start_fail_cnt = 0u,
 	},
 
 	.sw = {
