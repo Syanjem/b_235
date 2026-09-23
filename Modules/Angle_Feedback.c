@@ -1,48 +1,48 @@
 #include "Angle_Feedback.h"
 
-Angle_Struct angle_s = {
+angle_state_t g_angle = {
 	
-	.Speed_Base			= 8000.0f,		// 8000 rpm
+	.speed_base			= 8000.0f,		// 8000 rpm
 	
 //	.direction			= 1,
-//	.p 					= 4u,
+//	.pole_pairs 		= 4u,
 	.direction			= -1,
-	.p 					= 2u,
+	.pole_pairs 		= 2u,
 	.angle_zero			= 185.0f,
 	
-	.angle_cs			= 0.0f,
-	.angle_df			= 0.0f,
-	.angle_ma			= 0.0f,
-	.angle_ma_pre		= 0.0f,
+	.angle_encoder		= 0.0f,
+	.angle_dir_calib	= 0.0f,
+	.angle_mech			= 0.0f,
+	.angle_mech_prev	= 0.0f,
 	.speed				= 0.0f,
-	.speed_pre			= 0.0f,
+	.speed_prev			= 0.0f,
 	
-	.angle_ea			= 0.0f,
+	.angle_elec			= 0.0f,
 	
-	.angle_cs_debug		= 0u,
-	.angle_step_debug	= 23u,
-	.angle_ea_debug		= 0u,
+	.angle_encoder_debug	= 0u,
+	.angle_step_debug		= 23u,
+	.angle_elec_debug		= 0u,
 };
 
 
-void Angle_Feedback_Update(Angle_Struct* pa)
+void Angle_Feedback_Update(angle_state_t* pa)
 {
 	// 1.更新 ma_pre
-	pa->angle_ma_pre = pa->angle_ma;
+	pa->angle_mech_prev = pa->angle_mech;
 	
 	// 2.encoder 测量角度
-	angleCs_float_fromEncoder(&(pa->angle_cs));
-	angleDf_float_fix(&(pa->angle_df), pa->direction, pa->angle_cs);
+	angleCs_float_fromEncoder(&(pa->angle_encoder));
+	angleDf_float_fix(&(pa->angle_dir_calib), pa->direction, pa->angle_encoder);
 	
 	// 3.更新 ma
-	float a = pa->angle_df - pa->angle_zero;
+	float a = pa->angle_dir_calib - pa->angle_zero;
 	if (a >= 0.0f)
 	{
-		pa->angle_ma = a;
+		pa->angle_mech = a;
 	}
 	else
 	{
-		pa->angle_ma = 360.0f + a;
+		pa->angle_mech = 360.0f + a;
 	}
 
 	// 首拍保护: 用真实机械角初始化前值, 消除上电时 0°->实际角度 的虚假差分
@@ -50,21 +50,21 @@ void Angle_Feedback_Update(Angle_Struct* pa)
 	if (first)
 	{
 		first = 0u;
-		pa->angle_ma_pre = pa->angle_ma;
+		pa->angle_mech_prev = pa->angle_mech;
 		pa->speed = 0.0f;
 	}
 
 	// 4.更新 ea
-	pa->angle_ea = pa->p * pa->angle_ma;
-	while (pa->angle_ea >= 360.0f)
+	pa->angle_elec = pa->pole_pairs * pa->angle_mech;
+	while (pa->angle_elec >= 360.0f)
 	{
-		pa->angle_ea -= 360.0f;
+		pa->angle_elec -= 360.0f;
 	}
 }
 
-void Speed_Feedback_Update(Angle_Struct* pa)
+void Speed_Feedback_Update(angle_state_t* pa)
 {
-    float d = (pa->angle_ma - pa->angle_ma_pre);
+    float d = (pa->angle_mech - pa->angle_mech_prev);
     if (d >= 180.0f)        d -= 360.0f;
     else if (d <= -180.0f)  d += 360.0f;
 

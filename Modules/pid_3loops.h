@@ -42,7 +42,7 @@ typedef struct
 } Pi_Data_Struct;
 extern Pi_Data_Struct pi_data_s;
 
-void PID_Feedback_Update(Pi_Data_Struct* pd, Angle_Struct* pa, Idq_Struct* pi);
+void PID_Feedback_Update(Pi_Data_Struct* pd, angle_state_t* pa, current_state_t* pi);
 
 void PID_1Loop_Target_Update(float tid, float tiq, Pi_Data_Struct* p_data);
 void PID_2Loop_Target_Update(float s, Pi_Data_Struct* p_data);

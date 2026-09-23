@@ -1,22 +1,22 @@
 #include "Idq_Feedback.h"
 
 // get: [id, iq]
-Idq_Struct idq_s = {
-	.I_Base = 33.0f,	// 标幺值范围是 [-1, +1]
+current_state_t g_current = {
+	.i_base = 33.0f,	// 标幺值范围是 [-1, +1]
 	
-	.ic_shot	= 0u,
-	.ib_shot	= 0u,
+	.i_c_sample	= 0u,
+	.i_b_sample	= 0u,
 	.i_offset	= 2048u,
-	.pv_shot	= 0u,
+	.vbus_sample	= 0u,
 	
-	.ia			= 0.0f,
-	.ib			= 0.0f,
+	.i_a			= 0.0f,
+	.i_b			= 0.0f,
 	.i_alpha	= 0.0f,
 	.i_beta		= 0.0f,
-	.vbus_V		= 1.0f,
+	.vbus		= 1.0f,
 	
-	.id			= 0.0f,
-	.iq			= 0.0f,
+	.i_d			= 0.0f,
+	.i_q			= 0.0f,
 };
 
 
@@ -24,25 +24,25 @@ Idq_Struct idq_s = {
 
 // get [ic_raw, ib_raw]
 
-void i_shot_form_adc0inserted(Idq_Struct* pi)
+void i_shot_form_adc0inserted(current_state_t* pi)
 {
-	pi->ic_shot = adc_inserted_data_read(ADC0, ADC_INSERTED_CHANNEL_0);	// 对应 JDR1/IDATA0
-	pi->ib_shot = adc_inserted_data_read(ADC0, ADC_INSERTED_CHANNEL_1);	// 对应 JDR2/IDATA1
-	pi->pv_shot = adc_inserted_data_read(ADC0, ADC_INSERTED_CHANNEL_2);	// 对应 JDR3/IDATA2
+	pi->i_c_sample = adc_inserted_data_read(ADC0, ADC_INSERTED_CHANNEL_0);	// 对应 JDR1/IDATA0
+	pi->i_b_sample = adc_inserted_data_read(ADC0, ADC_INSERTED_CHANNEL_1);	// 对应 JDR2/IDATA1
+	pi->vbus_sample = adc_inserted_data_read(ADC0, ADC_INSERTED_CHANNEL_2);	// 对应 JDR3/IDATA2
 
 	static 	uint8_t adc_init_num = 0;
 	if (adc_init_num < MEDIAN_N)	// 前 MEDIAN_N 个数据采样原始值
 	{
-		filter_s_ic.adc_buf[adc_init_num] = pi->ic_shot;
-		filter_s_ib.adc_buf[adc_init_num] = pi->ib_shot;
-		filter_s_pv.adc_buf[adc_init_num] = pi->pv_shot;
+		filter_s_ic.adc_buf[adc_init_num] = pi->i_c_sample;
+		filter_s_ib.adc_buf[adc_init_num] = pi->i_b_sample;
+		filter_s_pv.adc_buf[adc_init_num] = pi->vbus_sample;
 		adc_init_num++;
 	}
 	else // 后面的数据采样滤波值
 	{
-		pi->ic_shot = get_filtered(pi->ic_shot, &filter_s_ic);
-		pi->ib_shot = get_filtered(pi->ib_shot, &filter_s_ib);
-		pi->pv_shot = get_filtered(pi->pv_shot, &filter_s_pv);
+		pi->i_c_sample = get_filtered(pi->i_c_sample, &filter_s_ic);
+		pi->i_b_sample = get_filtered(pi->i_b_sample, &filter_s_ib);
+		pi->vbus_sample = get_filtered(pi->vbus_sample, &filter_s_pv);
 	}
 }
 
@@ -50,22 +50,22 @@ void i_shot_form_adc0inserted(Idq_Struct* pi)
 
 
 // [ic_raw, ib_raw, ea] to [iq, id]
-void Idq_Feedback_Update(Idq_Struct* pi, float ea)
+void Idq_Feedback_Update(current_state_t* pi, float ea)
 {
 	i_shot_form_adc0inserted(pi);
 	
 	// 相电流换算: ADC raw -> 电压 -> 减零点偏置(offset) -> 电流(单位 A)
 	// (ic, ib) 获取 (ia, ib)
-	pi->ib = ((float)(pi->ib_shot - 2048) / 2048.0f);	// pu [-1, +1]
-	float c = ((float)(pi->ic_shot - 2048) / 2048.0f);
-	pi->ia = - (pi->ib + c);
+	pi->i_b = ((float)(pi->i_b_sample - 2048) / 2048.0f);	// pu [-1, +1]
+	float c = ((float)(pi->i_c_sample - 2048) / 2048.0f);
+	pi->i_a = - (pi->i_b + c);
 	
-	pi->vbus_V = ((float)pi->pv_shot / 4095.0f) * 3.3f * 11.0f;
+	pi->vbus = ((float)pi->vbus_sample / 4095.0f) * 3.3f * 11.0f;
 	
 	// clarke 变换，获取 (i_alpha, i_beta) 
-	clarke_transform(pi->ia, pi->ib, &pi->i_alpha, &pi->i_beta);
+	clarke_transform(pi->i_a, pi->i_b, &pi->i_alpha, &pi->i_beta);
 	// park 变化，获取 (id, iq)
-	park_transform(pi->i_alpha, pi->i_beta, ea * M_PI / 180.0f, &pi->id, &pi->iq);
+	park_transform(pi->i_alpha, pi->i_beta, ea * M_PI / 180.0f, &pi->i_d, &pi->i_q);
 }
 
 

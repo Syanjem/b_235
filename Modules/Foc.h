@@ -26,7 +26,7 @@ void foc_pi_task(SUB_MODE_CONTROL fcm);
 void foc_debug(uint8_t f_m, float target, uint32_t d1, uint32_t d2);
 
 
-void foc_feedback_update(Pi_Data_Struct* pd, Angle_Struct* pa, Idq_Struct* pi);
+void foc_feedback_update(Pi_Data_Struct* pd, angle_state_t* pa, current_state_t* pi);
 
 extern volatile uint32_t num;
 extern uint16_t dnum2;

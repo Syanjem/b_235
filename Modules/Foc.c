@@ -48,7 +48,7 @@ void foc_standby_task(void)
 		{
 			
 			/* 零点 ≈ 2048，偏离 ±40（约 ±0.6A）才认为有真实电流跳变 */
-			if(motorData.components.p_idq->ic_shot < 1908 || motorData.components.p_idq->ic_shot > 2188)
+			if(motorData.components.p_idq->i_c_sample < 1908 || motorData.components.p_idq->i_c_sample > 2188)
 			{
 				motorData.runtime.adc_trig_cnt++;
 				if (motorData.runtime.adc_trig_cnt >= 3)   /* 连续 3 次（约150us）确认，去抖 */
@@ -106,8 +106,8 @@ void foc_working_task(void)
 	v_update(motorData.components.p_v, 
 				motorData.pi.p_data->target_vq,
 				motorData.pi.p_data->target_vd,
-				motorData.components.p_idq->vbus_V, 
-				motorData.components.p_angle->angle_ea);
+				motorData.components.p_idq->vbus, 
+				motorData.components.p_angle->angle_elec);
 	pwm_output_update(&v_s, &abc_s);
 	
 	// 逻辑分析仪获取数据
@@ -135,9 +135,9 @@ void atk_task(void)
 	if (atk_num % 100 == 0)
 	{
 		// iq/id 标幺化 [-1, +1]pu, 编码到 [0, 65535]
-		float iq = CLAMP(motorData.components.p_idq->iq, -1.0f, 1.0f);
+		float iq = CLAMP(motorData.components.p_idq->i_q, -1.0f, 1.0f);
 		iq16 = (uint16_t)((iq + 1.0f) * 32767.5f);
-		float id = CLAMP(motorData.components.p_idq->id, -1.0f, 1.0f);
+		float id = CLAMP(motorData.components.p_idq->i_d, -1.0f, 1.0f);
 		id16 = (uint16_t)((id + 1.0f) * 32767.5f);
 
 		// 速度单位是千度/秒, 范围 ±36 (6000RPM=36千度/秒), 编码到 [0, 65535]
@@ -162,7 +162,7 @@ void over_i_stop_task(void)
 		motorData.runtime.stop_delay_num++;
 	}
 	
-	float q = CLAMP(motorData.components.p_idq->iq, -1.0f, 1.0f);
+	float q = CLAMP(motorData.components.p_idq->i_q, -1.0f, 1.0f);
 	uint16_t iq_stop = (uint16_t)((q + 1.0f) * 32767.5f);
 	
 	if (iq_stop <= 25000 && motorData.runtime.stop_delay_num >= 50000)
@@ -205,9 +205,6 @@ void foc_pi_task(SUB_MODE_CONTROL fcm)
 }
 
 
-
-
-
 void foc_debug(uint8_t f_m, float ta, uint32_t d1, uint32_t d2)
 {
 	foc_mode = f_m;
@@ -230,11 +227,11 @@ void foc_debug(uint8_t f_m, float ta, uint32_t d1, uint32_t d2)
 }
 
 // 更新 foc 反馈数据
-void foc_feedback_update(Pi_Data_Struct* pd, Angle_Struct* pa, Idq_Struct* pi)
+void foc_feedback_update(Pi_Data_Struct* pd, angle_state_t* pa, current_state_t* pi)
 {	
 	Angle_Feedback_Update(pa);		// 反馈角度
 	Speed_Feedback_Update(pa);		// 反馈速度
-	Idq_Feedback_Update(pi, pa->angle_ea);	// 反馈电流
+	Idq_Feedback_Update(pi, pa->angle_elec);	// 反馈电流
 	
 	PID_Feedback_Update(pd, pa, pi);	// Pi 环反馈输入
 }

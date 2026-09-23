@@ -13,8 +13,8 @@ MOTOR_DATA motorData = {
 	},
 	
 	.components	= {
-		.p_angle  = &angle_s,
-		.p_idq	  = &idq_s,
+		.p_angle  = &g_angle,
+		.p_idq	  = &g_current,
 		.p_v	  = &v_s,
 		.p_abcpwm = &abc_s,
 	},

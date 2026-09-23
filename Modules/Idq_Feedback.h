@@ -8,26 +8,24 @@
 
 typedef struct
 {
-	float I_Base;
-	
-	uint16_t ic_shot;
-	uint16_t ib_shot;
-	uint16_t i_offset;
-	uint16_t pv_shot;
-	
-	float ia;
-	float ib;
-	float i_alpha;
-	float i_beta;
-	float vbus_V; 
-	
-	float id;
-	float iq;
-} Idq_Struct;
-extern Idq_Struct idq_s;
+    float    i_base;          // 电流基值
 
+    uint16_t i_c_sample;      // C 相电流采样
+    uint16_t i_b_sample;      // B 相电流采样
+    uint16_t i_offset;        // 电流偏置
+    uint16_t vbus_sample;     // 母线电压采样
 
-void i_shot_form_adc0inserted(Idq_Struct* pi);
+    float    i_a;             // A 相电流
+    float    i_b;             // B 相电流
+    float    i_alpha;         // Clark 变换 alpha 轴
+    float    i_beta;          // Clark 变换 beta 轴
+    float    vbus;            // 母线电压
+
+    float    i_d;             // Park 变换 d 轴
+    float    i_q;             // Park 变换 q 轴
+} current_state_t;
+
+extern current_state_t g_current;
 
 
 
@@ -53,7 +51,7 @@ uint16_t get_filtered(uint16_t raw_adc, Filter_Struct* pfs); // icb_dma_buffer2[
 
 
 
-void Idq_Feedback_Update(Idq_Struct* pi, float ea);
+void Idq_Feedback_Update(current_state_t* pi, float ea);
 
 
 void bubble_sort(uint16_t arr[], uint8_t len);

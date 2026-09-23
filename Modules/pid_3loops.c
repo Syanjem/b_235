@@ -52,12 +52,12 @@ Pi_Data_Struct pi_data_s = {
 };
 
 
-void PID_Feedback_Update(Pi_Data_Struct* pd, Angle_Struct* pa, Idq_Struct* pi)
+void PID_Feedback_Update(Pi_Data_Struct* pd, angle_state_t* pa, current_state_t* pi)
 {
-	pd->feedback_mangle = pa->angle_ma;
+	pd->feedback_mangle = pa->angle_mech;
 	pd->feedback_speed	= pa->speed;
-	pd->feedback_id = pi->id;
-	pd->feedback_iq = pi->iq;
+	pd->feedback_id = pi->i_d;
+	pd->feedback_iq = pi->i_q;
 }
 
 void PID_1Loop_Target_Update(float tid, float tiq, Pi_Data_Struct* p_data)
