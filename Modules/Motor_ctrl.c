@@ -1,8 +1,5 @@
 #include "Motor_ctrl.h"
 
-
-
-
 MOTOR_DATA motorData = {
 	.state = {
 		.stateMode					= STATE_MODE_STANDBY,
@@ -10,6 +7,7 @@ MOTOR_DATA motorData = {
 		.working_subMode_control	= CONTROL_MODE_SPEED_RAMP,
 		.stateFlag = {
 			.STATE_MODE_SWITCH_FLAG	= STATE_MODE_SWITCH_ON,
+			.ATK_FLAG				= ATK_ON,
 			.STATE_MODE_FLAG		= STATE_MODE_STANDBY,
 		},
 	},

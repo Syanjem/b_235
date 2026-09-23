@@ -10,18 +10,18 @@
 extern uint16_t ma_test;
 
 extern volatile uint16_t ATK_data;
-extern volatile uint16_t atk_num;
 
 extern volatile uint8_t foc_mode;
 extern volatile uint16_t num_send;
 void ADC0_1_IRQHandler(void);
 
+void foc_standby_task(void);
+void foc_working_task(void);
 
-void foc_task(void);
+void atk_task(void);
+void over_i_stop_task(void);
 
-
-
-void foc_pi_task(WORKING_SUB_MODE_CONTROL fcm);
+void foc_pi_task(SUB_MODE_CONTROL fcm);
 
 
 

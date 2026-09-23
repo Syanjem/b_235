@@ -18,25 +18,23 @@ typedef enum
 #define STATE_MODE_SWITCH_OFF	0u
 #define STATE_MODE_SWITCH_ON	1u
 
-/* 1.待机，子模式 */
-// 启动方式
+/* 子模式 启动方式 */
 typedef enum
 {
-    START_MODE_POWERUP,       /* 直接运行: 上电即启动FOC闭环(PWM立即输出)           */
-    START_MODE_ADC,  	/* 电流检测启动: 三相短路接地, 等ADC检测到外力转动电流 */
+    START_MODE_POWERUP,     /* 直接运行: 上电即启动FOC闭环(PWM立即输出)           */
+    START_MODE_ADC,  		/* 电流检测启动: 三相短路接地, 等ADC检测到外力转动电流 */
     START_MODE_CAN,     	/* CAN信号启动: 等上位机CAN命令(0x101)触发can_ok      */
-    START_MODE_EXTI,     /* GPIO外部中断启动: 等PB8/PB9下降沿触发(预留)         */
-} STANDBY_SUB_MODE_START;
+    START_MODE_EXTI,     	/* GPIO外部中断启动: 等PB8/PB9下降沿触发(预留)         */
+} SUB_MODE_START;
 
 
-/* 2.工作，子模式 */
-// 工作模式
+/* 子模式 工作模式 */
 typedef enum
 {
     CONTROL_MODE_I          = 0,  /* 力矩控制: Iq闭环, target_iq直接给定                */
     CONTROL_MODE_SPEED      = 1,  /* 速度控制: 速度环→target_iq→电流环, target_speed给定 */
     CONTROL_MODE_SPEED_RAMP = 2,  /* 速度梯度: 速度斜坡规划+前馈(平滑加减速)            */
-} WORKING_SUB_MODE_CONTROL;
+} SUB_MODE_CONTROL;
 
 /* 3.停机，子模式 */
 //typedef enum
@@ -53,19 +51,22 @@ typedef enum
 //{
 //} DEBUG_SUB_MODE
 
+#define ATK_OFF		0u
+#define ATK_ON		1u
 typedef struct
 {
 	uint8_t 	STATE_MODE_SWITCH_FLAG;
+	uint8_t		ATK_FLAG;
 	STATE_MODE	STATE_MODE_FLAG;
 } STATE_FLAG;
 
 typedef struct
 {
-    STATE_MODE          		stateMode;				
-    STANDBY_SUB_MODE_START      standby_subMode_start;	
-	WORKING_SUB_MODE_CONTROL	working_subMode_control;
+    STATE_MODE          stateMode;				
+    SUB_MODE_START      standby_subMode_start;	
+	SUB_MODE_CONTROL	working_subMode_control;
 //	STOPPED_SUB_MODE
-	STATE_FLAG					stateFlag;
+	STATE_FLAG			stateFlag;
 } MOTOR_STATE;
 
 typedef struct

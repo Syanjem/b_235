@@ -3,94 +3,99 @@
 uint16_t ma_test = 0u;
 
 volatile uint16_t ATK_data = 0u;
-volatile uint16_t atk_num = 0u;
 
 volatile uint8_t foc_mode = 1;
 volatile float foc_target_set = 0.0f;
 volatile uint8_t can_stop = 0;
 volatile uint16_t num_send = 0;
+
 void ADC0_1_IRQHandler(void)
 {
     if (RESET != adc_flag_get(ADC0, ADC_FLAG_EOIC)) 
     {
         adc_flag_clear(ADC0, ADC_FLAG_EOIC);	
 		
-		foc_task();
+		// 1.更新反馈数据
+		foc_feedback_update(motorData.pi.p_pidata, motorData.components.p_angle, motorData.components.p_idq);	
+		
+		switch(motorData.state.stateMode)
+		{
+			case STATE_MODE_STANDBY:
+			{
+				foc_standby_task();
+				break;
+			}
+			case STATE_MODE_WORKING:
+			{
+				foc_working_task();
+				break;
+			}
+			default : break;
+		}
+
     }
+}
+
+void foc_standby_task(void)
+{
+	// foc 的不同启动模式
+	switch(motorData.state.standby_subMode_start)
+	{
+		case START_MODE_POWERUP:
+		{
+			motorData.state.stateFlag.STATE_MODE_SWITCH_FLAG = STATE_MODE_SWITCH_ON;
+			motorData.state.stateFlag.STATE_MODE_FLAG = STATE_MODE_WORKING;
+			break;
+		}
+		case START_MODE_ADC:
+		{
+			static uint8_t adc_trig_cnt = 0;
+			
+			/* 零点 ≈ 2048，偏离 ±40（约 ±0.6A）才认为有真实电流跳变 */
+			if(motorData.components.p_idq->ic_shot < 1908 || motorData.components.p_idq->ic_shot > 2188)
+			{
+				adc_trig_cnt++;
+				if (adc_trig_cnt >= 3)   /* 连续 3 次（约150us）确认，去抖 */
+				{
+					motorData.state.stateFlag.STATE_MODE_SWITCH_FLAG = STATE_MODE_SWITCH_ON;
+					motorData.state.stateFlag.STATE_MODE_FLAG = STATE_MODE_WORKING;
+					adc_trig_cnt = 0;
+				}
+			}
+			else
+			{
+				adc_trig_cnt = 0;         /* 一旦回到零点窗口，计数清零 */
+			}
+			break;		
+		}
+		case START_MODE_CAN:
+		{
+//			if (can_ok == 1)
+//			{
+//						motorData.state.stateFlag.STATE_MODE_SWITCH_FLAG = STATE_MODE_SWITCH_ON;
+//						motorData.state.stateFlag.STATE_MODE_FLAG = STATE_MODE_WORKING;
+//				GPIO_canWait_end();
+//			}	
+			break;		
+		}
+		case START_MODE_EXTI:
+		{
+			if (exti_foc_ok == 1)
+			{
+				motorData.state.stateFlag.STATE_MODE_SWITCH_FLAG = STATE_MODE_SWITCH_ON;
+				motorData.state.stateFlag.STATE_MODE_FLAG = STATE_MODE_WORKING;
+				exti_foc_ok = 0;
+			}	
+			break;		
+		}
+	}
 }
 
 
 
-void foc_task(void)
+void foc_working_task(void)
 {
-	// 1.更新反馈数据
-	foc_feedback_update(motorData.pi.p_pidata, motorData.components.p_angle, motorData.components.p_idq);	
 	
-	static uint32_t p_num = 0u;
-	
-	switch (motorData.state.stateMode)
-	{
-		case STATE_MODE_STANDBY:   // 待机: 才走启动检测
-		{
-			// 2.foc 的不同启动模式
-			switch(motorData.state.standby_subMode_start)
-			{
-				case START_MODE_POWERUP:
-				{
-					motorData.state.stateFlag.STATE_MODE_SWITCH_FLAG = STATE_MODE_SWITCH_ON;
-					motorData.state.stateFlag.STATE_MODE_FLAG = STATE_MODE_WORKING;
-					break;
-				}
-				case START_MODE_ADC:
-				{
-					static uint8_t adc_trig_cnt = 0;
-					
-					/* 零点 ≈ 2048，偏离 ±40（约 ±0.6A）才认为有真实电流跳变 */
-					if(motorData.components.p_idq->ic_shot < 1908 || motorData.components.p_idq->ic_shot > 2188)
-					{
-						adc_trig_cnt++;
-						if (adc_trig_cnt >= 3)   /* 连续 3 次（约150us）确认，去抖 */
-						{
-							motorData.state.stateFlag.STATE_MODE_SWITCH_FLAG = STATE_MODE_SWITCH_ON;
-							motorData.state.stateFlag.STATE_MODE_FLAG = STATE_MODE_WORKING;
-							adc_trig_cnt = 0;
-						}
-					}
-					else
-					{
-						adc_trig_cnt = 0;         /* 一旦回到零点窗口，计数清零 */
-					}
-					break;		
-				}
-				case START_MODE_CAN:
-				{
-		//			if (can_ok == 1)
-		//			{
-//						motorData.state.stateFlag.STATE_MODE_SWITCH_FLAG = STATE_MODE_SWITCH_ON;
-//						motorData.state.stateFlag.STATE_MODE_FLAG = STATE_MODE_WORKING;
-		//				GPIO_canWait_end();
-		//			}	
-					break;		
-				}
-				case START_MODE_EXTI:
-				{
-					if (exti_foc_ok == 1)
-					{
-						motorData.state.stateFlag.STATE_MODE_SWITCH_FLAG = STATE_MODE_SWITCH_ON;
-						motorData.state.stateFlag.STATE_MODE_FLAG = STATE_MODE_WORKING;
-						exti_foc_ok = 0;
-					}	
-					break;		
-				}
-			}
-			break;
-		}
-		case STATE_MODE_WORKING:   // 工作: 直接跑 PI
-		{
-			if (p_num <51000)
-			{
-				p_num++;
-			}
 //			/* CAN 停止命令: 切回 CAN_SIGNAL 待机, 重新配 EXTI 等下次启动 */
 //			if (can_stop == 1)
 //			{
@@ -98,67 +103,92 @@ void foc_task(void)
 //				motorData.state.focRunningBeginMode = FOC_RUNNING_BEGIN_MODE_CAN_SIGNAL;
 //				GPIO_canWait_start();
 //			}
-			
-			// foc pi 算法
-			foc_pi_task(motorData.state.working_subMode_control);
+	
+	// foc pi 算法
+	foc_pi_task(motorData.state.working_subMode_control);
 
-			v_update(motorData.components.p_v, 
-						motorData.pi.p_pidata->target_vq,
-						motorData.pi.p_pidata->target_vd,
-						motorData.components.p_idq->vbus_V, 
-						motorData.components.p_angle->angle_ea);
-			pwm_output_update(&v_s, &abc_s);
-			break;
-		}
-
+	v_update(motorData.components.p_v, 
+				motorData.pi.p_pidata->target_vq,
+				motorData.pi.p_pidata->target_vd,
+				motorData.components.p_idq->vbus_V, 
+				motorData.components.p_angle->angle_ea);
+	pwm_output_update(&v_s, &abc_s);
+	
+	// 逻辑分析仪获取数据
+	if(motorData.state.stateFlag.ATK_FLAG == ATK_ON)
+	{
+		atk_task();
 	}
 
+	// 过流停机
+	over_i_stop_task();
 
-	
-	// ATK
+}
+
+
+// ATK
+void atk_task(void)
+{
 	static uint16_t iq16 = 0u;
+	static uint16_t id16 = 0u;
+	static uint16_t spd16 = 0u;
+	static uint16_t tspd16 = 0u;
 	
-		if (atk_num % 100 == 0)
-		{
-			// iq/id 标幺化 [-1, +1]pu, 编码到 [0, 65535]
-			float iq = CLAMP(motorData.components.p_idq->iq, -1.0f, 1.0f);
-			iq16 = (uint16_t)((iq + 1.0f) * 32767.5f);
-			float id = CLAMP(motorData.components.p_idq->id, -1.0f, 1.0f);
-			uint16_t id16 = (uint16_t)((id + 1.0f) * 32767.5f);
+	static uint16_t atk_num	= 0u;
+	atk_num = (atk_num + 1) % 100;
+	if (atk_num % 100 == 0)
+	{
+		// iq/id 标幺化 [-1, +1]pu, 编码到 [0, 65535]
+		float iq = CLAMP(motorData.components.p_idq->iq, -1.0f, 1.0f);
+		iq16 = (uint16_t)((iq + 1.0f) * 32767.5f);
+		float id = CLAMP(motorData.components.p_idq->id, -1.0f, 1.0f);
+		id16 = (uint16_t)((id + 1.0f) * 32767.5f);
 
-			// 速度单位是千度/秒, 范围 ±36 (6000RPM=36千度/秒), 编码到 [0, 65535]
-			float spd = CLAMP(motorData.components.p_angle->speed, -40.0f, 40.0f);
-			uint16_t spd16 = (uint16_t)((spd + 40.0f) / 80.0f * 65535.0f);
-			float tspd = CLAMP(motorData.pi.p_pidata->target_speed, -40.0f, 40.0f);
-			uint16_t tspd16 = (uint16_t)((tspd + 40.0f) / 80.0f * 65535.0f);
+		// 速度单位是千度/秒, 范围 ±36 (6000RPM=36千度/秒), 编码到 [0, 65535]
+		float spd = CLAMP(motorData.components.p_angle->speed, -40.0f, 40.0f);
+		spd16 = (uint16_t)((spd + 40.0f) / 80.0f * 65535.0f);
+		float tspd = CLAMP(motorData.pi.p_pidata->target_speed, -40.0f, 40.0f);
+		tspd16 = (uint16_t)((tspd + 40.0f) / 80.0f * 65535.0f);
 
-			// 按需选择发送: iq/id/feedback_speed/target_speed
-//						spi0_ATK_16bit(iq16);
-//						spi0_ATK_16bit(id16);
-//						spi0_ATK_16bit(spd16);
-//						spi0_ATK_16bit(tspd16);
-		}
-		atk_num = (atk_num + 1) % 100;
+// 		按需选择发送: iq/id/feedback_speed/target_speed
+//		spi0_ATK_16bit(iq16);
+//		spi0_ATK_16bit(id16);
+//		spi0_ATK_16bit(spd16);
+//		spi0_ATK_16bit(tspd16);
+	}
+	
+}
+
+void over_i_stop_task(void)
+{
+	static uint32_t p_num = 0u;
+	if (p_num <51000)
+	{
+		p_num++;
+	}
+	
+	float q = CLAMP(motorData.components.p_idq->iq, -1.0f, 1.0f);
+	uint16_t iq_stop = (uint16_t)((q + 1.0f) * 32767.5f);
 	
 	static uint8_t iq16_up = 0u;
-	if (iq16 <= 25000 && p_num >= 50000)
+	if (iq_stop <= 25000 && p_num >= 50000)
 	{
 		iq16_up ++;	
-	} else { iq16_up = 0; }
+	} 
+	else 
+	{ 
+		iq16_up = 0; 
+	}
+	
 	if (iq16_up >=5)
 	{
 		motorData.state.stateFlag.STATE_MODE_SWITCH_FLAG = STATE_MODE_SWITCH_ON;
 		motorData.state.stateFlag.STATE_MODE_FLAG = STATE_MODE_STOPPED;
 	}
-	
-
 }
 
 
-
-
-
-void foc_pi_task(WORKING_SUB_MODE_CONTROL fcm)
+void foc_pi_task(SUB_MODE_CONTROL fcm)
 {
 	switch (fcm)
 	{
