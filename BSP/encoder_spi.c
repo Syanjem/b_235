@@ -23,7 +23,7 @@ void angle_cs_float_from_encoder(float* a_cs)
 }
 
 
-void angleCs_uint16_t_fromEncoder(uint16_t* a_cs)
+void angle_cs_uint16_t_from_encoder(uint16_t* a_cs)
 {
 	// 开启 SPI 片选
     SPI_CSN1_encoder_SELECT();	// 选择 encoder 片选
