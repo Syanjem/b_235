@@ -10,18 +10,18 @@
 
 typedef enum
 {
-    STATE_MODE_STANDBY,		// 待机模式
-    STATE_MODE_WORKING,	  	// 工作模式
-	STATE_MODE_STOPPED,		// 停机模式
-	STATE_MODE_CALIBRATING,	// 校准模式
-} STATE_MODE;
+    STATE_MODE_STANDBY     = 0,   // 待机模式
+    STATE_MODE_WORKING     = 1,   // 工作模式
+    STATE_MODE_STOPPED     = 2,   // 停机模式
+    STATE_MODE_CALIBRATING = 3    // 校准模式
+} state_mode_t;
 #define STATE_MODE_SWITCH_OFF	0u
 #define STATE_MODE_SWITCH_ON	1u
 /* 状态切换请求: 中断层置位, 主循环消费 */
 typedef struct {
-    uint8_t     switch_request;   // 0=无请求, 1=有请求  (原 STATE_MODE_SWITCH_FLAG)
-    STATE_MODE  target_mode;      // 目标状态            (原 STATE_MODE_FLAG)
-} STATE_REQUEST;
+    uint8_t       switch_request;   // 0=无请求, 1=有请求  (原 STATE_MODE_SWITCH_FLAG)
+    state_mode_t  target_mode;      // 目标状态            (原 STATE_MODE_FLAG)
+} state_request_t;
 
 /* 故障码 (恢复被注释的 FAULT_STATE) */
 typedef enum {
@@ -32,7 +32,7 @@ typedef enum {
     FAULT_OVER_TEMPERATURE,     // 过温
     FAULT_OVER_SPEED,           // 超速
     FAULT_START_FAIL,           // 启动失败 (原 iq16_up 触发的场景)
-} FAULT_STATE;
+} fault_state_t;
 
 /* 子模式 启动方式 */
 typedef enum
@@ -41,7 +41,7 @@ typedef enum
     START_MODE_ADC,  		/* 电流检测启动: 三相短路接地, 等ADC检测到外力转动电流 */
     START_MODE_CAN,     	/* CAN信号启动: 等上位机CAN命令(0x101)触发can_ok      */
     START_MODE_EXTI,     	/* GPIO外部中断启动: 等PB8/PB9下降沿触发(预留)         */
-} SUB_MODE_START;
+} sub_mode_start_t;
 
 /* 子模式 工作模式 */
 typedef enum
@@ -49,7 +49,7 @@ typedef enum
     CONTROL_MODE_I          = 0,  /* 力矩控制: Iq闭环, target_iq直接给定                */
     CONTROL_MODE_SPEED      = 1,  /* 速度控制: 速度环→target_iq→电流环, target_speed给定 */
     CONTROL_MODE_SPEED_RAMP = 2,  /* 速度梯度: 速度斜坡规划+前馈(平滑加减速)            */
-} SUB_MODE_CONTROL;
+} sub_mode_control_t;
 
 /* 3.停机，子模式 */
 //typedef enum
@@ -69,12 +69,12 @@ typedef enum
 
 /* 状态层 */
 typedef struct {
-    STATE_MODE        mode;            // 当前状态      (原 stateMode)
-    STATE_REQUEST     request;         // 切换请求      (原 stateFlag 的部分)
-//    FAULT_STATE       fault;           // 故障码 (新增)
-    SUB_MODE_START    start_mode;      // 待机子模式    (原 standby_subMode_start)
-    SUB_MODE_CONTROL  control_mode;    // 工作子模式    (原 working_subMode_control)
-} MOTOR_STATE;
+    state_mode_t        mode;            // 当前状态      (原 stateMode)
+    state_request_t     request;         // 切换请求      (原 stateFlag 的部分)
+//    fault_state_t       fault;           // 故障码 (新增)
+    sub_mode_start_t    start_mode;      // 待机子模式    (原 standby_subMode_start)
+    sub_mode_control_t  control_mode;    // 工作子模式    (原 working_subMode_control)
+} motor_state_t;
 
 typedef struct
 {
@@ -82,7 +82,7 @@ typedef struct
     current_state_t*    p_idq;      /* 电流反馈: ADC→ia/ib/ic→Clarke→Park→id/iq, 含母线电压  */
     voltage_state_t*    p_v;        /* 电压输出: vd/vq→逆Park→v_alpha/v_beta→调制比k        */
     pwm_duty_t*  		p_abcpwm;   /* PWM输出: duty_a/b/c (0~period), 写TIMER0 CCR寄存器     */
-} MOTOR_COMPONENTS;
+} motor_component_t;
 
 typedef struct {
     pi_state_t*   p_data;        // 运行时数据 (原 p_pidata)
@@ -90,7 +90,7 @@ typedef struct {
     pi_param_t*   p_speed;       // 速度环     (原 pi2_speed_para)
     pi_param_t*   p_iq;          // q轴电流环  (原 pi3_iq_para)
     pi_param_t*   p_id;          // d轴电流环  (原 pi3_id_para)
-} MOTOR_PI;
+} motor_pi_t;
 
 
 #define ATK_OFF		0u
@@ -99,24 +99,25 @@ typedef struct {
 typedef struct {
     uint8_t     atk_enable;        // ATK 调试发送开关
     // 后续可加: debug_enable, log_enable 等
-} MOTOR_SWITCH;
+} motor_switch_t;
 
 /* 运行时数据 (原散落在 Foc.c 的 static 变量) */
 typedef struct {
     uint32_t    stop_delay_num;        // 运行周期计数 (原 p_num)
     uint16_t     iq16_up;             // 过流计数 (原 iq16_up)
     uint16_t     adc_trig_cnt;      // ADC 触发去抖计数
-} MOTOR_RUNTIME;
+} motor_runtime_t;
 
-/* 顶层 */
+/* 电机顶层数据结构 */
 typedef struct {
-    MOTOR_STATE       state;
-    MOTOR_COMPONENTS  components;
-    MOTOR_PI          pi;
-    MOTOR_RUNTIME      runtime;       // 新增
-    MOTOR_SWITCH       sw;            // 新增
-} MOTOR_DATA;
-extern MOTOR_DATA motorData;
+    motor_state_t      state;        // 电机状态
+    motor_component_t  components;   // 硬件组件
+    motor_pi_t         pi;           // PI 控制器
+    motor_runtime_t    runtime;      // 运行时数据
+    motor_switch_t     sw;           // 开关状态
+} motor_data_t;
+
+extern motor_data_t g_motor_data;
 
 
 

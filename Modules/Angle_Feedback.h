@@ -35,8 +35,8 @@ extern angle_state_t g_angle;
 
 
 
-void Angle_Feedback_Update(angle_state_t* pa);
-void Speed_Feedback_Update(angle_state_t* pa);
+void angle_feedback_update(angle_state_t* pa);
+void speed_feedback_update(angle_state_t* pa);
 
 
 

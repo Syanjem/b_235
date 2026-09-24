@@ -1,6 +1,6 @@
 #include "Motor_ctrl.h"
 
-MOTOR_DATA motorData = {
+motor_data_t g_motor_data = {
 	.state = {
 		.mode					= STATE_MODE_STANDBY,
 		.request = {
@@ -41,32 +41,32 @@ MOTOR_DATA motorData = {
 
 void motor_state_mode_config_task(void)
 {
-	if(motorData.state.request.switch_request == STATE_MODE_SWITCH_ON)
+	if(g_motor_data.state.request.switch_request == STATE_MODE_SWITCH_ON)
 	{
-		motorData.state.request.switch_request = STATE_MODE_SWITCH_OFF;
-		switch(motorData.state.request.target_mode)
+		g_motor_data.state.request.switch_request = STATE_MODE_SWITCH_OFF;
+		switch(g_motor_data.state.request.target_mode)
 		{
 			case STATE_MODE_STANDBY: 
 			{	
-				motorData.state.mode = STATE_MODE_STANDBY;
+				g_motor_data.state.mode = STATE_MODE_STANDBY;
 				motor_standby_config(); 
 				break; 
 			}
 			case STATE_MODE_WORKING: 
 			{	
-				motorData.state.mode = STATE_MODE_WORKING;
+				g_motor_data.state.mode = STATE_MODE_WORKING;
 				motor_working_config(); 
 				break; 
 			}
 			case STATE_MODE_STOPPED: 
 			{	
-				motorData.state.mode = STATE_MODE_STOPPED;
+				g_motor_data.state.mode = STATE_MODE_STOPPED;
 				motor_stopped_config(); 
 				break; 
 			}
 //			case STATE_MODE_CALIBRATING: 
 //			{	
-//				motorData.state.mode = STATE_MODE_CALIBRATING;
+//				g_motor_data.state.mode = STATE_MODE_CALIBRATING;
 //				motor_calibrating_config(); 
 //				break; 
 //			}
@@ -78,7 +78,7 @@ void motor_state_mode_config_task(void)
 
 void motor_standby_config(void)
 {
-	switch (motorData.state.start_mode)
+	switch (g_motor_data.state.start_mode)
 	{
 		case START_MODE_POWERUP: 
 		{
@@ -105,7 +105,7 @@ void motor_standby_config(void)
 
 void motor_working_config(void)
 {
-	switch (motorData.state.start_mode)
+	switch (g_motor_data.state.start_mode)
 	{
 		case START_MODE_POWERUP: 
 		{

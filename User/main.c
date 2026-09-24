@@ -19,15 +19,15 @@ int main(void)
 	bsp_connect_init();		
 	
 	// 1. 初始化
-	motorData.state.mode 				= STATE_MODE_STANDBY;
-	motorData.state.start_mode		 	= START_MODE_ADC;
-	motorData.state.control_mode		= CONTROL_MODE_SPEED_RAMP;
+	g_motor_data.state.mode 				= STATE_MODE_STANDBY;
+	g_motor_data.state.start_mode		 	= START_MODE_ADC;
+	g_motor_data.state.control_mode		= CONTROL_MODE_SPEED_RAMP;
 	
 	// 2. 进入待机模式
-	motorData.state.request.switch_request = STATE_MODE_SWITCH_ON;
-	motorData.state.request.target_mode	   = STATE_MODE_STANDBY;
+	g_motor_data.state.request.switch_request = STATE_MODE_SWITCH_ON;
+	g_motor_data.state.request.target_mode	   = STATE_MODE_STANDBY;
 	
-	switch (motorData.state.control_mode)
+	switch (g_motor_data.state.control_mode)
 	{
 		case CONTROL_MODE_I:
 		{
@@ -48,7 +48,7 @@ int main(void)
 	
 	
 //	2. 校准（ma_zero = 94.0f）
-//	angleZero_float_get((&angle_s);
+//	angle_zero_float_get((&angle_s);
 //	delay_1ms(1000);
 	
 	bsp_timer_trigger_adc_detect_enable();	// 使能 adc0, timer0

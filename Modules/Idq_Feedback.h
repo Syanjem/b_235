@@ -51,7 +51,7 @@ uint16_t get_filtered(uint16_t raw_adc, Filter_Struct* pfs); // icb_dma_buffer2[
 
 
 
-void Idq_Feedback_Update(current_state_t* pi, float ea);
+void idq_feedback_update(current_state_t* pi, float ea);
 
 
 void bubble_sort(uint16_t arr[], uint8_t len);

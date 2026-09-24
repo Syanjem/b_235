@@ -53,14 +53,14 @@ void jiaozhun_mangle_rawion(int8_t* direction)
 //	motor_to_eangle(0);
 //	delay_1ms(1);
 //	angle_cs_float_from_encoder(&ma_now);
-//	angleDf_float_fix(&ma_now, angle_s.direction);
+//	angle_df_float_fix(&ma_now, angle_s.direction);
 //	for (int i = 1; i < 48; i++)	// 8圈47步（每步60度）
 //	{
 //		ma_pre = ma_now;
 //		motor_to_eangle(60 * i % 360);
 //		delay_1ms(1);
 //		angle_cs_float_from_encoder(&ma_now);
-//		angleDf_float_fix(&ma_now, angle_s.direction, );
+//		angle_df_float_fix(&ma_now, angle_s.direction, );
 //		
 //		if (ma_now > ma_pre)
 //		{
@@ -86,7 +86,7 @@ void jiaozhun_mangle_rawion(int8_t* direction)
 //	
 //	motor_to_eangle(0);
 //	angle_cs_float_from_encoder(pma0);
-//	angleDf_float_fix(pma0, angle_s.direction);
+//	angle_df_float_fix(pma0, angle_s.direction);
 //	
 //	delay_1ms(10);
 //}

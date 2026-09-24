@@ -46,18 +46,18 @@ void v_update(voltage_state_t* pv, float t_vq, float t_vd, float vbus_V, float e
 void pwm_output_update(voltage_state_t* pv, pwm_duty_t* pabc)
 {
 	uint8_t sector;
-	SVPWM_Sector(pv->v_alpha, pv->v_beta, &sector);
+	svpwm_sector(pv->v_alpha, pv->v_beta, &sector);
 	
 	float k1, k2;
-	SVPWM_V123T12(pv->v_alpha, pv->v_beta, sector, &k1, &k2);
+	svpwm_v123t12(pv->v_alpha, pv->v_beta, sector, &k1, &k2);
 	
-	SVPWM_ABCDuty(k1, k2, sector, pv->modulation, pabc->period,
+	svpwm_abcduty(k1, k2, sector, pv->modulation, pabc->period,
 					&pabc->duty_a, &pabc->duty_b, &pabc->duty_c);
 	
 	set_pwm_abc(pabc);
 }
 
-void SVPWM_Sector(float alpha, float beta, uint8_t* ps)
+void svpwm_sector(float alpha, float beta, uint8_t* ps)
 {
     if (alpha == 0.0f && beta == 0.0f)
     {
@@ -87,7 +87,7 @@ void SVPWM_Sector(float alpha, float beta, uint8_t* ps)
 }
 
 
-void SVPWM_V123T12(float v_alpha, float v_beta, int8_t sector, float* pT1, float* pT2)
+void svpwm_v123t12(float v_alpha, float v_beta, int8_t sector, float* pT1, float* pT2)
 {
     /* 3.计算基本矢量时间比例系数 */
     // 中间变量
@@ -130,7 +130,7 @@ void SVPWM_V123T12(float v_alpha, float v_beta, int8_t sector, float* pT1, float
 }
 
 
-void SVPWM_ABCDuty(float T1, float T2, int8_t s, float k, uint16_t period, 
+void svpwm_abcduty(float T1, float T2, int8_t s, float k, uint16_t period, 
 					uint16_t *pTA, uint16_t *pTB, uint16_t *pTC)
 {
     if (T1 + T2 == 0.0f)

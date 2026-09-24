@@ -13,9 +13,9 @@ void ADC0_1_IRQHandler(void)
         adc_flag_clear(ADC0, ADC_FLAG_EOIC);	
 		
 		// 1.更新反馈数据
-		foc_feedback_update(motorData.pi.p_data, motorData.components.p_angle, motorData.components.p_idq);	
+		foc_feedback_update(g_motor_data.pi.p_data, g_motor_data.components.p_angle, g_motor_data.components.p_idq);	
 		
-		switch(motorData.state.mode)
+		switch(g_motor_data.state.mode)
 		{
 			case STATE_MODE_STANDBY:
 			{
@@ -36,31 +36,31 @@ void ADC0_1_IRQHandler(void)
 void foc_standby_task(void)
 {
 	// foc 的不同启动模式
-	switch(motorData.state.start_mode)
+	switch(g_motor_data.state.start_mode)
 	{
 		case START_MODE_POWERUP:
 		{
-			motorData.state.request.switch_request = STATE_MODE_SWITCH_ON;
-			motorData.state.request.target_mode = STATE_MODE_WORKING;
+			g_motor_data.state.request.switch_request = STATE_MODE_SWITCH_ON;
+			g_motor_data.state.request.target_mode = STATE_MODE_WORKING;
 			break;
 		}
 		case START_MODE_ADC:
 		{
 			
 			/* 零点 ≈ 2048，偏离 ±40（约 ±0.6A）才认为有真实电流跳变 */
-			if(motorData.components.p_idq->i_c_sample < 1908 || motorData.components.p_idq->i_c_sample > 2188)
+			if(g_motor_data.components.p_idq->i_c_sample < 1908 || g_motor_data.components.p_idq->i_c_sample > 2188)
 			{
-				motorData.runtime.adc_trig_cnt++;
-				if (motorData.runtime.adc_trig_cnt >= 3)   /* 连续 3 次（约150us）确认，去抖 */
+				g_motor_data.runtime.adc_trig_cnt++;
+				if (g_motor_data.runtime.adc_trig_cnt >= 3)   /* 连续 3 次（约150us）确认，去抖 */
 				{
-					motorData.state.request.switch_request = STATE_MODE_SWITCH_ON;
-					motorData.state.request.target_mode = STATE_MODE_WORKING;
-					motorData.runtime.adc_trig_cnt = 0;
+					g_motor_data.state.request.switch_request = STATE_MODE_SWITCH_ON;
+					g_motor_data.state.request.target_mode = STATE_MODE_WORKING;
+					g_motor_data.runtime.adc_trig_cnt = 0;
 				}
 			}
 			else
 			{
-				motorData.runtime.adc_trig_cnt = 0;         /* 一旦回到零点窗口，计数清零 */
+				g_motor_data.runtime.adc_trig_cnt = 0;         /* 一旦回到零点窗口，计数清零 */
 			}
 			break;		
 		}
@@ -68,9 +68,9 @@ void foc_standby_task(void)
 		{
 //			if (can_ok == 1)
 //			{
-//				motorData.state.request.switch_request = STATE_MODE_SWITCH_ON;
-//				motorData.state.request.target_mode = STATE_MODE_WORKING;
-//				GPIO_canWait_end();
+//				g_motor_data.state.request.switch_request = STATE_MODE_SWITCH_ON;
+//				g_motor_data.state.request.target_mode = STATE_MODE_WORKING;
+//				gpio_can_wait_end();
 //			}	
 			break;		
 		}
@@ -78,8 +78,8 @@ void foc_standby_task(void)
 		{
 			if (exti_foc_ok == 1)
 			{
-				motorData.state.request.switch_request = STATE_MODE_SWITCH_ON;
-				motorData.state.request.target_mode = STATE_MODE_WORKING;
+				g_motor_data.state.request.switch_request = STATE_MODE_SWITCH_ON;
+				g_motor_data.state.request.target_mode = STATE_MODE_WORKING;
 				exti_foc_ok = 0;
 			}	
 			break;		
@@ -96,22 +96,22 @@ void foc_working_task(void)
 //			if (can_stop == 1)
 //			{
 //				can_stop = 0;
-//				motorData.state.focRunningBeginMode = FOC_RUNNING_BEGIN_MODE_CAN_SIGNAL;
-//				GPIO_canWait_start();
+//				g_motor_data.state.focRunningBeginMode = FOC_RUNNING_BEGIN_MODE_CAN_SIGNAL;
+//				gpio_can_wait_start();
 //			}
 	
 	// foc pi 算法
-	foc_pi_task(motorData.state.control_mode);
+	foc_pi_task(g_motor_data.state.control_mode);
 
-	v_update(motorData.components.p_v, 
-				motorData.pi.p_data->target_vq,
-				motorData.pi.p_data->target_vd,
-				motorData.components.p_idq->vbus, 
-				motorData.components.p_angle->angle_elec);
+	v_update(g_motor_data.components.p_v, 
+				g_motor_data.pi.p_data->target_vq,
+				g_motor_data.pi.p_data->target_vd,
+				g_motor_data.components.p_idq->vbus, 
+				g_motor_data.components.p_angle->angle_elec);
 	pwm_output_update(&g_voltage, &g_pwm_duty);
 	
 	// 逻辑分析仪获取数据
-	if(motorData.sw.atk_enable == ATK_ON)
+	if(g_motor_data.sw.atk_enable == ATK_ON)
 	{
 		atk_task();
 	}
@@ -135,15 +135,15 @@ void atk_task(void)
 	if (atk_num % 100 == 0)
 	{
 		// iq/id 标幺化 [-1, +1]pu, 编码到 [0, 65535]
-		float iq = CLAMP(motorData.components.p_idq->i_q, -1.0f, 1.0f);
+		float iq = CLAMP(g_motor_data.components.p_idq->i_q, -1.0f, 1.0f);
 		iq16 = (uint16_t)((iq + 1.0f) * 32767.5f);
-		float id = CLAMP(motorData.components.p_idq->i_d, -1.0f, 1.0f);
+		float id = CLAMP(g_motor_data.components.p_idq->i_d, -1.0f, 1.0f);
 		id16 = (uint16_t)((id + 1.0f) * 32767.5f);
 
 		// 速度单位是千度/秒, 范围 ±36 (6000RPM=36千度/秒), 编码到 [0, 65535]
-		float spd = CLAMP(motorData.components.p_angle->speed, -40.0f, 40.0f);
+		float spd = CLAMP(g_motor_data.components.p_angle->speed, -40.0f, 40.0f);
 		spd16 = (uint16_t)((spd + 40.0f) / 80.0f * 65535.0f);
-		float tspd = CLAMP(motorData.pi.p_data->target_speed, -40.0f, 40.0f);
+		float tspd = CLAMP(g_motor_data.pi.p_data->target_speed, -40.0f, 40.0f);
 		tspd16 = (uint16_t)((tspd + 40.0f) / 80.0f * 65535.0f);
 
 // 		按需选择发送: iq/id/feedback_speed/target_speed
@@ -157,38 +157,38 @@ void atk_task(void)
 
 void over_i_stop_task(void)
 {
-	if (motorData.runtime.stop_delay_num <51000)
+	if (g_motor_data.runtime.stop_delay_num <51000)
 	{
-		motorData.runtime.stop_delay_num++;
+		g_motor_data.runtime.stop_delay_num++;
 	}
 	
-	float q = CLAMP(motorData.components.p_idq->i_q, -1.0f, 1.0f);
+	float q = CLAMP(g_motor_data.components.p_idq->i_q, -1.0f, 1.0f);
 	uint16_t iq_stop = (uint16_t)((q + 1.0f) * 32767.5f);
 	
-	if (iq_stop <= 25000 && motorData.runtime.stop_delay_num >= 50000)
+	if (iq_stop <= 25000 && g_motor_data.runtime.stop_delay_num >= 50000)
 	{
-		motorData.runtime.iq16_up ++;	
+		g_motor_data.runtime.iq16_up ++;	
 	} 
 	else 
 	{ 
-		motorData.runtime.iq16_up = 0; 
+		g_motor_data.runtime.iq16_up = 0; 
 	}
 	
-	if (motorData.runtime.iq16_up >=5)
+	if (g_motor_data.runtime.iq16_up >=5)
 	{
-		motorData.state.request.switch_request = STATE_MODE_SWITCH_ON;
-		motorData.state.request.target_mode = STATE_MODE_STOPPED;
+		g_motor_data.state.request.switch_request = STATE_MODE_SWITCH_ON;
+		g_motor_data.state.request.target_mode = STATE_MODE_STOPPED;
 	}
 }
 
 
-void foc_pi_task(SUB_MODE_CONTROL fcm)
+void foc_pi_task(sub_mode_control_t fcm)
 {
 	switch (fcm)
 	{
 		case CONTROL_MODE_I:
 		{
-			foc_1loop_update(motorData.pi.p_id, motorData.pi.p_iq, motorData.pi.p_data); // 转矩模式
+			foc_1loop_update(g_motor_data.pi.p_id, g_motor_data.pi.p_iq, g_motor_data.pi.p_data); // 转矩模式
 			break;
 		}
 		case CONTROL_MODE_SPEED:
@@ -198,7 +198,7 @@ void foc_pi_task(SUB_MODE_CONTROL fcm)
 		}
 		case CONTROL_MODE_SPEED_RAMP:
 		{
-			foc_2loop_update(motorData.pi.p_speed, motorData.pi.p_id, motorData.pi.p_iq, motorData.pi.p_data);
+			foc_2loop_update(g_motor_data.pi.p_speed, g_motor_data.pi.p_id, g_motor_data.pi.p_iq, g_motor_data.pi.p_data);
 			break;
 		}
 	}
@@ -210,17 +210,17 @@ void foc_debug(uint8_t f_m, float ta, uint32_t d1, uint32_t d2)
 	foc_mode = f_m;
 	if (f_m == 1u)
 	{
-		PID_1Loop_Target_Update(0.0f, ta, &g_pi_state);
+		pid_1loop_target_update(0.0f, ta, &g_pi_state);
 	}
 	else if (f_m == 2u)
 	{
-//		PID_2Loop_Target_Update(ta, &g_pi_state);
+//		pid_2loop_target_update(ta, &g_pi_state);
 		speed_ramp_s.target = ta;
 		dnum2 = d2;
 	}
 	else if (f_m == 3u)
 	{
-		PID_3Loop_Target_Update(ta, &g_pi_state);
+		pid_3loop_target_update(ta, &g_pi_state);
 		dnum1 = d1;
 		dnum2 = d2;
 	}
@@ -229,11 +229,11 @@ void foc_debug(uint8_t f_m, float ta, uint32_t d1, uint32_t d2)
 // 更新 foc 反馈数据
 void foc_feedback_update(pi_state_t* ps, angle_state_t* pa, current_state_t* pi)
 {	
-	Angle_Feedback_Update(pa);		// 反馈角度
-	Speed_Feedback_Update(pa);		// 反馈速度
-	Idq_Feedback_Update(pi, pa->angle_elec);	// 反馈电流
+	angle_feedback_update(pa);		// 反馈角度
+	speed_feedback_update(pa);		// 反馈速度
+	idq_feedback_update(pi, pa->angle_elec);	// 反馈电流
 	
-	PID_Feedback_Update(ps, pa, pi);	// Pi 环反馈输入
+	pid_feedback_update(ps, pa, pi);	// Pi 环反馈输入
 }
 
 

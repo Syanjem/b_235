@@ -17,7 +17,7 @@ void foc_working_task(void);
 void atk_task(void);
 void over_i_stop_task(void);
 
-void foc_pi_task(SUB_MODE_CONTROL fcm);
+void foc_pi_task(sub_mode_control_t fcm);
 
 
 

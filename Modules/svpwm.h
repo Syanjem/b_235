@@ -58,9 +58,9 @@ void v_update(voltage_state_t* pv, float t_vq, float t_vd, float vbus_V, float e
 
 
 void pwm_output_update(voltage_state_t* pv, pwm_duty_t* pabc);
-void SVPWM_Sector(float alpha, float beta, uint8_t* ps);
-void SVPWM_V123T12(float v_alpha, float v_beta, int8_t sector, float* pT1, float* pT2);
-void SVPWM_ABCDuty(float T1, float T2, int8_t s, float k, uint16_t period, uint16_t *pTA, uint16_t *pTB, uint16_t *pTC);
+void svpwm_sector(float alpha, float beta, uint8_t* ps);
+void svpwm_v123t12(float v_alpha, float v_beta, int8_t sector, float* pT1, float* pT2);
+void svpwm_abcduty(float T1, float T2, int8_t s, float k, uint16_t period, uint16_t *pTA, uint16_t *pTB, uint16_t *pTC);
 void set_pwm_abc(pwm_duty_t* pabc);
 
 

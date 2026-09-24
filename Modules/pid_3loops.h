@@ -46,11 +46,11 @@ typedef struct
 
 extern pi_state_t g_pi_state;
 
-void PID_Feedback_Update(pi_state_t* ps, angle_state_t* pa, current_state_t* pi);
+void pid_feedback_update(pi_state_t* ps, angle_state_t* pa, current_state_t* pi);
 
-void PID_1Loop_Target_Update(float tid, float tiq, pi_state_t* p_state);
-void PID_2Loop_Target_Update(float s, pi_state_t* p_state);
-void PID_3Loop_Target_Update(float ma, pi_state_t* p_state);
+void pid_1loop_target_update(float tid, float tiq, pi_state_t* p_state);
+void pid_2loop_target_update(float s, pi_state_t* p_state);
+void pid_3loop_target_update(float ma, pi_state_t* p_state);
 
 void pi1_mangle_loop(pi_param_t* pid1, pi_state_t* p_state);
 void pi2_speed_loop(pi_param_t* pid2, pi_state_t* p_state);

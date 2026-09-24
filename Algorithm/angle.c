@@ -1,7 +1,7 @@
 #include "angle.h"
 
-// ma_raw ·½ÏòÐ£×¼ ma_dirfixed
-void angleDf_float_fix(float* a_df, int8_t direction, float a_cs)
+// ma_raw ï¿½ï¿½ï¿½ï¿½Ð£×¼ ma_dirfixed
+void angle_df_float_fix(float* a_df, int8_t direction, float a_cs)
 {		
 	if (direction == 1)
 	{
@@ -13,8 +13,8 @@ void angleDf_float_fix(float* a_df, int8_t direction, float a_cs)
 	}
 }
 
-// ÁãµãÐ£×¼ ma0
-void angleZero_float_get(float* a_zero, int8_t direction)
+// ï¿½ï¿½ï¿½Ð£×¼ ma0
+void angle_zero_float_get(float* a_zero, int8_t direction)
 {
 	float a;
 	
@@ -23,7 +23,7 @@ void angleZero_float_get(float* a_zero, int8_t direction)
 	delay_1ms(600);
 
 	angle_cs_float_from_encoder(&a);
-	angleDf_float_fix(&a, direction, a);
+	angle_df_float_fix(&a, direction, a);
 	
 	*a_zero = a;
 	
@@ -37,12 +37,12 @@ void angleZero_float_get(float* a_zero, int8_t direction)
 
 
 
-/***   µ÷ÊÔ¹¦ÄÜ   ***/
-/***   µ÷ÊÔ¹¦ÄÜ   ***/
-/***   µ÷ÊÔ¹¦ÄÜ   ***/
+/***   ï¿½ï¿½ï¿½Ô¹ï¿½ï¿½ï¿½   ***/
+/***   ï¿½ï¿½ï¿½Ô¹ï¿½ï¿½ï¿½   ***/
+/***   ï¿½ï¿½ï¿½Ô¹ï¿½ï¿½ï¿½   ***/
 
-// ¿ª»·×ª¶¯¡¢²âÊÔ´Å±à¡¢²âÊÔ·½Ïò
-void debug_open23_sendEa_dirFix(uint16_t st)
+// ï¿½ï¿½ï¿½ï¿½×ªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô´Å±à¡¢ï¿½ï¿½ï¿½Ô·ï¿½ï¿½ï¿½
+void debug_open23_send_ea_dir_fix(uint16_t st)
 {
 	static uint16_t ea = 0;
 	
@@ -55,8 +55,8 @@ void debug_open23_sendEa_dirFix(uint16_t st)
 	}
 }
 
-// ²âÊÔ¼«¶ÔÊý
-void debug_P_of_motor(void)
+// ï¿½ï¿½ï¿½Ô¼ï¿½ï¿½ï¿½ï¿½ï¿½
+void debug_p_of_motor(void)
 {
 	for (int i = 0; i < 8; i++)
 	{
@@ -98,13 +98,13 @@ void motor_to_eangle(uint16_t ea)
 void set_pwm_eangle_arrabc(uint16_t eangle)
 {
 	
-	if (TIMER0_PWM_MODE == TIMER_OC_MODE_PWM1)		// PWM1£¨µÍ ¸ß£©
+	if (TIMER0_PWM_MODE == TIMER_OC_MODE_PWM1)		// PWM1ï¿½ï¿½ï¿½ï¿½ ï¿½ß£ï¿½
 	{
 		timer_channel_output_pulse_value_config(TIMER0, TIMER_CH_2, en1500_arrabc_array[eangle][1]);	
 		timer_channel_output_pulse_value_config(TIMER0, TIMER_CH_1, en1500_arrabc_array[eangle][2]);	
 		timer_channel_output_pulse_value_config(TIMER0, TIMER_CH_0, en1500_arrabc_array[eangle][3]);	
 	}
-	else if (TIMER0_PWM_MODE == TIMER_OC_MODE_PWM0)	// PWM0£¨¸ß µÍ£©
+	else if (TIMER0_PWM_MODE == TIMER_OC_MODE_PWM0)	// PWM0ï¿½ï¿½ï¿½ï¿½ ï¿½Í£ï¿½
 	{
 		timer_channel_output_pulse_value_config(TIMER0, TIMER_CH_2, TIMER0_PERIOD - en1500_arrabc_array[eangle][1]);	
 		timer_channel_output_pulse_value_config(TIMER0, TIMER_CH_1, TIMER0_PERIOD - en1500_arrabc_array[eangle][2]);	
@@ -112,7 +112,7 @@ void set_pwm_eangle_arrabc(uint16_t eangle)
 	}
 }
 
-// Êä³ö 360 µç½Ç¶ÈËùÐèµÄÕ¼¿Õ±È
+// ï¿½ï¿½ï¿½ 360 ï¿½ï¿½Ç¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Õ¼ï¿½Õ±ï¿½
 uint16_t en1500_arrabc_array[361][4] = {	
 {0, 2200, 1200, 1200},
 {1, 2200, 1219, 1200},

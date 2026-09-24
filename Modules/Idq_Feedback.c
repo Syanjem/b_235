@@ -50,7 +50,7 @@ void i_shot_form_adc0inserted(current_state_t* pi)
 
 
 // [ic_raw, ib_raw, ea] to [iq, id]
-void Idq_Feedback_Update(current_state_t* pi, float ea)
+void idq_feedback_update(current_state_t* pi, float ea)
 {
 	i_shot_form_adc0inserted(pi);
 	

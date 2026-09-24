@@ -25,14 +25,14 @@ angle_state_t g_angle = {
 };
 
 
-void Angle_Feedback_Update(angle_state_t* pa)
+void angle_feedback_update(angle_state_t* pa)
 {
 	// 1.更新 ma_pre
 	pa->angle_mech_prev = pa->angle_mech;
 	
 	// 2.encoder 测量角度
 	angle_cs_float_from_encoder(&(pa->angle_encoder));
-	angleDf_float_fix(&(pa->angle_dir_calib), pa->direction, pa->angle_encoder);
+	angle_df_float_fix(&(pa->angle_dir_calib), pa->direction, pa->angle_encoder);
 	
 	// 3.更新 ma
 	float a = pa->angle_dir_calib - pa->angle_zero;
@@ -62,7 +62,7 @@ void Angle_Feedback_Update(angle_state_t* pa)
 	}
 }
 
-void Speed_Feedback_Update(angle_state_t* pa)
+void speed_feedback_update(angle_state_t* pa)
 {
     float d = (pa->angle_mech - pa->angle_mech_prev);
     if (d >= 180.0f)        d -= 360.0f;

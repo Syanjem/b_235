@@ -52,7 +52,7 @@ pi_state_t g_pi_state = {
 };
 
 
-void PID_Feedback_Update(pi_state_t* ps, angle_state_t* pa, current_state_t* pi)
+void pid_feedback_update(pi_state_t* ps, angle_state_t* pa, current_state_t* pi)
 {
 	ps->feedback_mangle = pa->angle_mech;
 	ps->feedback_speed	= pa->speed;
@@ -60,18 +60,18 @@ void PID_Feedback_Update(pi_state_t* ps, angle_state_t* pa, current_state_t* pi)
 	ps->feedback_iq = pi->i_q;
 }
 
-void PID_1Loop_Target_Update(float tid, float tiq, pi_state_t* p_state)
+void pid_1loop_target_update(float tid, float tiq, pi_state_t* p_state)
 {
 	p_state->target_id = tid;
 	p_state->target_iq = tiq;
 }
 
-void PID_2Loop_Target_Update(float ts, pi_state_t* p_state)
+void pid_2loop_target_update(float ts, pi_state_t* p_state)
 {
 	p_state->target_speed = ts;
 }
 
-void PID_3Loop_Target_Update(float tma, pi_state_t* p_state)
+void pid_3loop_target_update(float tma, pi_state_t* p_state)
 {
 	p_state->target_mangle = tma;
 }
