@@ -19,13 +19,6 @@
 #define ONE_BY_OFFSET			(0.00048828125f)			// 1/2048.0f
 #define ONE_BY_ADC				(0.000244140625f)			// 1/4096.0f
 
-
-
-
-
-
-
-
 typedef unsigned char bool_t;	// 布尔类型
 
 
