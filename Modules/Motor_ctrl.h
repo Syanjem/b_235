@@ -51,20 +51,20 @@ typedef enum
     CONTROL_MODE_SPEED_RAMP = 2,  /* 速度梯度: 速度斜坡规划+前馈(平滑加减速)            */
 } sub_mode_control_t;
 
-/* 3.停机，子模式 */
+/* 子模式  */
 //typedef enum
 //{
-//} STOPPED_SUB_MODE
+//} sub_mode_ _t
 
-/* 4.校准，子模式 */
+/* 子模式  */
 //typedef enum
 //{
-//} CALIBRATING_SUB_MODE
+//} sub_mode_ _t
 
-/* 5.调试，子模式 */
+/* 子模式  */
 //typedef enum
 //{
-//} DEBUG_SUB_MODE
+//} sub_mode_ _t
 
 
 /* 状态层 */
@@ -103,9 +103,9 @@ typedef struct {
 
 /* 运行时数据 (原散落在 Foc.c 的 static 变量) */
 typedef struct {
-    uint32_t    stop_delay_num;        // 运行周期计数 (原 p_num)
-    uint16_t     iq16_up;             // 过流计数 (原 iq16_up)
-    uint16_t     adc_trig_cnt;      // ADC 触发去抖计数
+    uint32_t	stop_delay_num;		// 运行周期计数 (原 p_num)
+    uint16_t	iq16_up;			// 过流计数 (原 iq16_up)
+    uint16_t	adc_trig_cnt;		// ADC 触发去抖计数
 } motor_runtime_t;
 
 /* 电机顶层数据结构 */

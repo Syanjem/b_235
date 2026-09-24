@@ -23,7 +23,7 @@ void foc_pi_task(sub_mode_control_t fcm);
 
 
 
-void foc_debug(uint8_t f_m, float target, uint32_t d1, uint32_t d2);
+void foc_control_mode_set(uint8_t f_m, float target, uint32_t d1, uint32_t d2);
 
 
 void foc_feedback_update(pi_state_t* pd, angle_state_t* pa, current_state_t* pi);

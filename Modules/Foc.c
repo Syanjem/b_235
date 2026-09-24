@@ -205,7 +205,7 @@ void foc_pi_task(sub_mode_control_t fcm)
 }
 
 
-void foc_debug(uint8_t f_m, float ta, uint32_t d1, uint32_t d2)
+void foc_control_mode_set(uint8_t f_m, float ta, uint32_t d1, uint32_t d2)
 {
 	foc_mode = f_m;
 	if (f_m == 1u)
