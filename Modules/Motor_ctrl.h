@@ -34,7 +34,7 @@ typedef enum {
     FAULT_START_FAIL,           // 启动失败 (原 iq16_up 触发的场景)
 } fault_state_t;
 
-/* 子模式 启动方式 */
+/* 子模式 foc 启动方式 */
 typedef enum
 {
     START_MODE_POWERUP,     /* 直接运行: 上电即启动FOC闭环(PWM立即输出)           */
@@ -43,7 +43,7 @@ typedef enum
     START_MODE_EXTI,     	/* GPIO外部中断启动: 等PB8/PB9下降沿触发(预留)         */
 } sub_mode_start_t;
 
-/* 子模式 工作模式 */
+/* 子模式 foc 工作模式 */
 typedef enum
 {
     CONTROL_MODE_I          = 0,  /* 力矩控制: Iq闭环, target_iq直接给定                */
@@ -76,6 +76,7 @@ typedef struct {
     sub_mode_control_t  control_mode;    // 工作子模式    (原 working_subMode_control)
 } motor_state_t;
 
+/* 组件层 */
 typedef struct
 {
     angle_state_t*   	p_angle;    /* 角度反馈: 编码器机械角→电角度→速度, 由SPI0读取MT6816  */
@@ -84,6 +85,7 @@ typedef struct
     pwm_duty_t*  		p_abcpwm;   /* PWM输出: duty_a/b/c (0~period), 写TIMER0 CCR寄存器     */
 } motor_component_t;
 
+/* pi 层 */
 typedef struct {
     pi_state_t*   p_data;        // 运行时数据 (原 p_pidata)
     pi_param_t*   p_mangle;      // 位置环     (原 pi1_mangle_para)
@@ -125,31 +127,6 @@ void motor_state_mode_config_task(void);
 void motor_standby_config(void);
 void motor_working_config(void);
 void motor_stopped_config(void);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

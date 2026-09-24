@@ -4,6 +4,8 @@
 #include "gd32f30x_libopt.h"
 #include "adc.h"
 
+#include "algorithm.h"
+
 #include "general_def.h"
 
 typedef struct
@@ -27,8 +29,6 @@ typedef struct
 
 extern current_state_t g_current;
 
-
-
 #define MEDIAN_N  3   // 中值滤波：取最近5个值排序
 #define AVG_N     1  // 滑动平均：取最近10个中值滤波后的结果求平均
 typedef struct
@@ -39,22 +39,19 @@ typedef struct
 	uint16_t adc_buf[MEDIAN_N];     // 原始ADC值，用于中值滤波器
 	uint16_t med_out_buf[AVG_N];    // 中值滤波输出值，用于滑动平均滤波器
 	uint32_t sum;               // 滑动平均滤波累加和（用于求平均值，每次更新）
-} Filter_Struct;
-extern Filter_Struct filter_s_ic;
-extern Filter_Struct filter_s_ib; 
-extern Filter_Struct filter_s_pv;
-uint16_t get_filtered(uint16_t raw_adc, Filter_Struct* pfs); // icb_dma_buffer2[0]
+} current_filter_t; 
 
+extern current_filter_t g_filter_ic;
+extern current_filter_t g_filter_ib; 
+extern current_filter_t g_filter_pv;
 
-
-
-
+uint16_t get_filtered(uint16_t raw_adc, current_filter_t* pfs); // icb_dma_buffer2[0]
 
 
 void idq_feedback_update(current_state_t* pi, float ea);
 
 
-void bubble_sort(uint16_t arr[], uint8_t len);
+
 
 
 

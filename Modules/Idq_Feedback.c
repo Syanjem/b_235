@@ -23,7 +23,6 @@ current_state_t g_current = {
 
 
 // get [ic_raw, ib_raw]
-
 void i_shot_form_adc0inserted(current_state_t* pi)
 {
 	pi->i_c_sample = adc_inserted_data_read(ADC0, ADC_INSERTED_CHANNEL_0);	// 对应 JDR1/IDATA0
@@ -33,16 +32,16 @@ void i_shot_form_adc0inserted(current_state_t* pi)
 	static 	uint8_t adc_init_num = 0;
 	if (adc_init_num < MEDIAN_N)	// 前 MEDIAN_N 个数据采样原始值
 	{
-		filter_s_ic.adc_buf[adc_init_num] = pi->i_c_sample;
-		filter_s_ib.adc_buf[adc_init_num] = pi->i_b_sample;
-		filter_s_pv.adc_buf[adc_init_num] = pi->vbus_sample;
+		g_filter_ic.adc_buf[adc_init_num] = pi->i_c_sample;
+		g_filter_ib.adc_buf[adc_init_num] = pi->i_b_sample;
+		g_filter_pv.adc_buf[adc_init_num] = pi->vbus_sample;
 		adc_init_num++;
 	}
 	else // 后面的数据采样滤波值
 	{
-		pi->i_c_sample = get_filtered(pi->i_c_sample, &filter_s_ic);
-		pi->i_b_sample = get_filtered(pi->i_b_sample, &filter_s_ib);
-		pi->vbus_sample = get_filtered(pi->vbus_sample, &filter_s_pv);
+		pi->i_c_sample = get_filtered(pi->i_c_sample, &g_filter_ic);
+		pi->i_b_sample = get_filtered(pi->i_b_sample, &g_filter_ib);
+		pi->vbus_sample = get_filtered(pi->vbus_sample, &g_filter_pv);
 	}
 }
 
@@ -70,37 +69,31 @@ void idq_feedback_update(current_state_t* pi, float ea)
 
 
 
-Filter_Struct filter_s_ic = {
-	.med_index_p = 0,        					 // 中值滤波器写指针
-	.avg_index_p = 0,        					 // 滑动平均滤波器写指针
-
-	.adc_buf = {2048, 2048, 2048},     // 原始ADC值，用于中值滤波器
-	.med_out_buf = {2048},    // 中值滤波输出值，用于滑动平均滤波器
-	.sum = 2048u * AVG_N,             						  // 滑动平均滤波累加和（用于求平均值，每次更新）
+current_filter_t g_filter_ic = {
+	.med_index_p = 0,        		// 中值滤波器写指针
+	.avg_index_p = 0,        		// 滑动平均滤波器写指针
+	.adc_buf = {2048, 2048, 2048},	// 原始ADC值，用于中值滤波器
+	.med_out_buf = {2048},    		// 中值滤波输出值，用于滑动平均滤波器
+	.sum = 2048u * AVG_N,           // 滑动平均滤波累加和（用于求平均值，每次更新）
 };
 
-Filter_Struct filter_s_ib = {
-	.med_index_p = 0,        					 // 中值滤波器写指针
-	.avg_index_p = 0,        					 // 滑动平均滤波器写指针
-
-	.adc_buf = {2048, 2048, 2048},     // 原始ADC值，用于中值滤波器
-	.med_out_buf = {2048},    // 中值滤波输出值，用于滑动平均滤波器
-	.sum = 2048u * AVG_N,             						  // 滑动平均滤波累加和（用于求平均值，每次更新）
+current_filter_t g_filter_ib = {
+	.med_index_p = 0,        		// 中值滤波器写指针
+	.avg_index_p = 0,        		// 滑动平均滤波器写指针
+	.adc_buf = {2048, 2048, 2048},	// 原始ADC值，用于中值滤波器
+	.med_out_buf = {2048},    		// 中值滤波输出值，用于滑动平均滤波器
+	.sum = 2048u * AVG_N,         	// 滑动平均滤波累加和（用于求平均值，每次更新）
 };
 
-Filter_Struct filter_s_pv = {
-	.med_index_p = 0,        					 // 中值滤波器写指针
-	.avg_index_p = 0,        					 // 滑动平均滤波器写指针
-
-	// pv 是单极性信号, 母线 24V 经 1/11 分压 -> 2.18V -> ADC raw ≈ 2707
-	// 初始值填正常工作点读数, 开机首拍滤波输出即为真实值, 无收敛过程
-	.adc_buf = {2707, 2707, 2707},
+current_filter_t g_filter_pv = {
+	.med_index_p = 0,        		// 中值滤波器写指针
+	.avg_index_p = 0,        		// 滑动平均滤波器写指针
+	.adc_buf = {2707, 2707, 2707},	// pv 是单极性信号, 母线 24V 经 1/11 分压 -> 2.18V -> ADC raw ≈ 2707
 	.med_out_buf = {2707},
 	.sum = 2707u * AVG_N,
 };
 
-
-uint16_t get_filtered(uint16_t raw_adc, Filter_Struct* pfs) // icb_dma_buffer2[0]
+uint16_t get_filtered(uint16_t raw_adc, current_filter_t* pfs) // icb_dma_buffer2[0]
 {	
     uint16_t temp_arr[MEDIAN_N];
     uint16_t median_value;
@@ -131,18 +124,7 @@ uint16_t get_filtered(uint16_t raw_adc, Filter_Struct* pfs) // icb_dma_buffer2[0
 
 
 
-// 上面用到的中值滤波冒泡排序（N=5时很快）
-void bubble_sort(uint16_t arr[], uint8_t len) 
-{
-    for (uint8_t i = 0; i < len - 1; i++) {
-        for (uint8_t j = 0; j < len - 1 - i; j++) {
-            if (arr[j] > arr[j + 1]) {
-                uint16_t temp = arr[j];
-                arr[j] = arr[j + 1];
-                arr[j + 1] = temp;
-            }
-        }
-    }
-}
+
+
 
 

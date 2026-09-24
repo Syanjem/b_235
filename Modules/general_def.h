@@ -399,18 +399,6 @@ static inline int svm(float alpha, float beta, float *tA, float *tB, float *tC)
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
 /* ============ FOC 标幺化基准值 (Per-Unit Base Values) ============ */
 #define I_BASE 		33.0f	// ADC 双极性满量程: (3.3/2)V * 20A/V = 33A
 #define U_BASE 		12.0f	// 母线电压基准, 24V/2=12V (相电压峰值基准)
