@@ -15,16 +15,16 @@ MOTOR_DATA motorData = {
 	.components	= {
 		.p_angle  = &g_angle,
 		.p_idq	  = &g_current,
-		.p_v	  = &v_s,
-		.p_abcpwm = &abc_s,
+		.p_v	  = &g_voltage,
+		.p_abcpwm = &g_pwm_duty,
 	},
 	
 	.pi = {
-		.p_data 	= &pi_data_s,
-		.p_iq		= &pi3_iq_para,
-		.p_id		= &pi3_id_para,
-		.p_speed	= &pi2_speed_para,
-		.p_mangle	= &pi1_mangle_para,
+		.p_data 	= &g_pi_state,
+		.p_iq		= &g_pi_iq_param,
+		.p_id		= &g_pi_id_param,
+		.p_speed	= &g_pi_speed_param,
+		.p_mangle	= &g_pi_mangle_param,
 	},
 
 	.runtime = {

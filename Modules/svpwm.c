@@ -1,21 +1,21 @@
 #include "svpwm.h"
 
-V_Struct v_s = {
-	.U_Base = 24.0f,	// = vbus/2, 相电压峰值基准, SVPWM 线性区匹配
+voltage_state_t g_voltage = {
+	.u_base = 24.0f,	// = vbus/2, 相电压峰值基准, SVPWM 线性区匹配
 	
 	.v_d 		= 0.0f,
 	.v_q		= 1.0f,
-	.k 			= 0.5,
+	.modulation = 0.5,
 	.v_alpha	= 0.0f,
 	.v_beta		= 1.0f,	
 	.sector		= 2u,
 };
 
-ABCpwm_Struct abc_s = {
+pwm_duty_t g_pwm_duty = {
 	.period		= 3000,
-	.begin		= 1200,
-	.end		= 2700,
-	.T			= 1000,
+	.duty_min	= 1200,
+	.duty_max	= 2700,
+	.duty_span	= 1000,
 	.duty_a		= 1500,
 	.duty_b		= 2000,
 	.duty_c		= 2500,
@@ -23,7 +23,7 @@ ABCpwm_Struct abc_s = {
 
 
 // pv 从 pa 获取电角度，计算三角函数
-void v_update(V_Struct* pv, float t_vq, float t_vd, float vbus_V, float ea)
+void v_update(voltage_state_t* pv, float t_vq, float t_vd, float vbus_V, float ea)
 {
 	pv->v_q = t_vq;	// pu
 	pv->v_d = t_vd;	// pu
@@ -31,10 +31,10 @@ void v_update(V_Struct* pv, float t_vq, float t_vd, float vbus_V, float ea)
 	// 调制比 k = sqrt(3) * |Vdq|_pu / Vbus_pu
 	// vdq 是 pu, vbus 也要转 pu, 否则 k 会严重偏小
 	float vdq_mag = sqrtf(pv->v_d * pv->v_d + pv->v_q * pv->v_q);
-	float vbus_pu = vbus_V / pv->U_Base;	// 实际 V / 基准 V = pu
+	float vbus_pu = vbus_V / pv->u_base;	// 实际 V / 基准 V = pu
 	if (vbus_pu < 0.1f) vbus_pu = 0.1f;			// 兜底: 防除零
-	pv->k = _SQRT3 * vdq_mag / vbus_pu;
-	if (pv->k > 0.4f) pv->k = 0.4f;		// 过调制限幅
+	pv->modulation = _SQRT3 * vdq_mag / vbus_pu;
+	if (pv->modulation > 0.4f) pv->modulation = 0.4f;		// 过调制限幅
 
 	inverse_park(pv->v_d, pv->v_q, ea * M_PI / 180.0f, &pv->v_alpha, &pv->v_beta);
 }
@@ -43,7 +43,7 @@ void v_update(V_Struct* pv, float t_vq, float t_vd, float vbus_V, float ea)
 
 
 
-void pwm_output_update(V_Struct* pv, ABCpwm_Struct* pabc)
+void pwm_output_update(voltage_state_t* pv, pwm_duty_t* pabc)
 {
 	uint8_t sector;
 	SVPWM_Sector(pv->v_alpha, pv->v_beta, &sector);
@@ -51,7 +51,7 @@ void pwm_output_update(V_Struct* pv, ABCpwm_Struct* pabc)
 	float k1, k2;
 	SVPWM_V123T12(pv->v_alpha, pv->v_beta, sector, &k1, &k2);
 	
-	SVPWM_ABCDuty(k1, k2, sector, pv->k, pabc->period,
+	SVPWM_ABCDuty(k1, k2, sector, pv->modulation, pabc->period,
 					&pabc->duty_a, &pabc->duty_b, &pabc->duty_c);
 	
 	set_pwm_abc(pabc);
@@ -196,7 +196,7 @@ void SVPWM_ABCDuty(float T1, float T2, int8_t s, float k, uint16_t period,
 }
 
 
-void set_pwm_abc(ABCpwm_Struct* pabc)
+void set_pwm_abc(pwm_duty_t* pabc)
 {
 	
 	if (TIMER0_PWM_MODE == TIMER_OC_MODE_PWM1)		// PWM1（低 高）
@@ -217,7 +217,7 @@ void set_pwm_abc(ABCpwm_Struct* pabc)
 
 
 
-void pwm_output_update_debug(V_Struct* pv, ABCpwm_Struct* pabc)
+void pwm_output_update_debug(voltage_state_t* pv, pwm_duty_t* pabc)
 {
     float Va = CLAMP(pv->v_alpha, -1.0f, 1.0f);
     float Vb = CLAMP(-0.5f * pv->v_alpha + _SQRT3_2 * pv->v_beta, -1.0f, 1.0f);

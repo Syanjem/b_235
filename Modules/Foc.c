@@ -108,7 +108,7 @@ void foc_working_task(void)
 				motorData.pi.p_data->target_vd,
 				motorData.components.p_idq->vbus, 
 				motorData.components.p_angle->angle_elec);
-	pwm_output_update(&v_s, &abc_s);
+	pwm_output_update(&g_voltage, &g_pwm_duty);
 	
 	// 逻辑分析仪获取数据
 	if(motorData.sw.atk_enable == ATK_ON)
@@ -210,30 +210,30 @@ void foc_debug(uint8_t f_m, float ta, uint32_t d1, uint32_t d2)
 	foc_mode = f_m;
 	if (f_m == 1u)
 	{
-		PID_1Loop_Target_Update(0.0f, ta, &pi_data_s);
+		PID_1Loop_Target_Update(0.0f, ta, &g_pi_state);
 	}
 	else if (f_m == 2u)
 	{
-//		PID_2Loop_Target_Update(ta, &pi_data_s);
+//		PID_2Loop_Target_Update(ta, &g_pi_state);
 		speed_ramp_s.target = ta;
 		dnum2 = d2;
 	}
 	else if (f_m == 3u)
 	{
-		PID_3Loop_Target_Update(ta, &pi_data_s);
+		PID_3Loop_Target_Update(ta, &g_pi_state);
 		dnum1 = d1;
 		dnum2 = d2;
 	}
 }
 
 // 更新 foc 反馈数据
-void foc_feedback_update(Pi_Data_Struct* pd, angle_state_t* pa, current_state_t* pi)
+void foc_feedback_update(pi_state_t* ps, angle_state_t* pa, current_state_t* pi)
 {	
 	Angle_Feedback_Update(pa);		// 反馈角度
 	Speed_Feedback_Update(pa);		// 反馈速度
 	Idq_Feedback_Update(pi, pa->angle_elec);	// 反馈电流
 	
-	PID_Feedback_Update(pd, pa, pi);	// Pi 环反馈输入
+	PID_Feedback_Update(ps, pa, pi);	// Pi 环反馈输入
 }
 
 
@@ -241,47 +241,47 @@ void foc_feedback_update(Pi_Data_Struct* pd, angle_state_t* pa, current_state_t*
 volatile uint32_t num = 0;
 uint16_t dnum2 = 10;
 uint16_t dnum1 = 100;
-void foc_1loop_update(Pi_Para_Struct* pi3d, Pi_Para_Struct* pi3q, Pi_Data_Struct* p_data)
+void foc_1loop_update(pi_param_t* pi3d, pi_param_t* pi3q, pi_state_t* p_state)
 {
 	
-	pi3_iq_loop(pi3q, p_data);
-	pi3_id_loop(pi3d, p_data);
+	pi3_iq_loop(pi3q, p_state);
+	pi3_id_loop(pi3d, p_state);
 }
 
 
-void foc_2loop_update(Pi_Para_Struct* pi2, Pi_Para_Struct* pi3q, Pi_Para_Struct* pi3d, Pi_Data_Struct* p_data)
+void foc_2loop_update(pi_param_t* pi2, pi_param_t* pi3q, pi_param_t* pi3d, pi_state_t* p_state)
 {
 	
 	if (num % dnum2 == 0)
 	{
         speed_ramp_update(&speed_ramp_s);              // 先更新斜坡
-        pi_data_s.target_speed = speed_ramp_s.output;  // 斜坡输出作为速度目标
-        pi2_speed_loop(pi2, p_data);                   // 再跑速度环
+        g_pi_state.target_speed = speed_ramp_s.output;  // 斜坡输出作为速度目标
+        pi2_speed_loop(pi2, p_state);                   // 再跑速度环
 	}
 //	if (num % 1 == 0)
 //	{
-		pi3_iq_loop(pi3q, p_data);
-		pi3_id_loop(pi3d, p_data);
+		pi3_iq_loop(pi3q, p_state);
+		pi3_id_loop(pi3d, p_state);
 //	}
 	num = (num+1) % dnum2;
 }
 
 
-void foc_3loop_update(Pi_Para_Struct* pi1, Pi_Para_Struct* pi2, Pi_Para_Struct* pi3q, Pi_Para_Struct* pi3d, Pi_Data_Struct* p_data)
+void foc_3loop_update(pi_param_t* pi1, pi_param_t* pi2, pi_param_t* pi3q, pi_param_t* pi3d, pi_state_t* p_state)
 {
 	
 	if (num % dnum1 == 0)
 	{
-		pi1_mangle_loop(pi1, p_data);
+		pi1_mangle_loop(pi1, p_state);
 	}
 	if (num % dnum2 == 0)
 	{
-		pi2_speed_loop(pi2, p_data);
+		pi2_speed_loop(pi2, p_state);
 	}
 //	if (num % 1 == 0)
 //	{
-		pi3_iq_loop(pi3q, p_data);
-		pi3_id_loop(pi3d, p_data);
+		pi3_iq_loop(pi3q, p_state);
+		pi3_id_loop(pi3d, p_state);
 //	}
 	num = (num+1) % dnum1;
 }

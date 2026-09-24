@@ -26,14 +26,14 @@ void foc_pi_task(SUB_MODE_CONTROL fcm);
 void foc_debug(uint8_t f_m, float target, uint32_t d1, uint32_t d2);
 
 
-void foc_feedback_update(Pi_Data_Struct* pd, angle_state_t* pa, current_state_t* pi);
+void foc_feedback_update(pi_state_t* pd, angle_state_t* pa, current_state_t* pi);
 
 extern volatile uint32_t num;
 extern uint16_t dnum2;
 extern uint16_t dnum1;
-void foc_1loop_update(Pi_Para_Struct* pi3d, Pi_Para_Struct* pi3q, Pi_Data_Struct* p_data);
-void foc_2loop_update(Pi_Para_Struct* pi2, Pi_Para_Struct* pi3q, Pi_Para_Struct* pi3d, Pi_Data_Struct* p_data);
-void foc_3loop_update(Pi_Para_Struct* pi1, Pi_Para_Struct* pi2, Pi_Para_Struct* pi3q, Pi_Para_Struct* pi3d, Pi_Data_Struct* p_data);
+void foc_1loop_update(pi_param_t* pi3d, pi_param_t* pi3q, pi_state_t* p_data);
+void foc_2loop_update(pi_param_t* pi2, pi_param_t* pi3q, pi_param_t* pi3d, pi_state_t* p_data);
+void foc_3loop_update(pi_param_t* pi1, pi_param_t* pi2, pi_param_t* pi3q, pi_param_t* pi3d, pi_state_t* p_data);
 
 
 

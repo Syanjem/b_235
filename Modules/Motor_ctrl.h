@@ -78,18 +78,18 @@ typedef struct {
 
 typedef struct
 {
-    angle_state_t*   p_angle;    /* 角度反馈: 编码器机械角→电角度→速度, 由SPI0读取MT6816  */
-    current_state_t*     p_idq;      /* 电流反馈: ADC→ia/ib/ic→Clarke→Park→id/iq, 含母线电压  */
-    V_Struct*       p_v;        /* 电压输出: vd/vq→逆Park→v_alpha/v_beta→调制比k        */
-    ABCpwm_Struct*  p_abcpwm;   /* PWM输出: duty_a/b/c (0~period), 写TIMER0 CCR寄存器     */
+    angle_state_t*   	p_angle;    /* 角度反馈: 编码器机械角→电角度→速度, 由SPI0读取MT6816  */
+    current_state_t*    p_idq;      /* 电流反馈: ADC→ia/ib/ic→Clarke→Park→id/iq, 含母线电压  */
+    voltage_state_t*    p_v;        /* 电压输出: vd/vq→逆Park→v_alpha/v_beta→调制比k        */
+    pwm_duty_t*  		p_abcpwm;   /* PWM输出: duty_a/b/c (0~period), 写TIMER0 CCR寄存器     */
 } MOTOR_COMPONENTS;
 
 typedef struct {
-    Pi_Data_Struct*   p_data;        // 运行时数据 (原 p_pidata)
-    Pi_Para_Struct*   p_mangle;      // 位置环     (原 pi1_mangle_para)
-    Pi_Para_Struct*   p_speed;       // 速度环     (原 pi2_speed_para)
-    Pi_Para_Struct*   p_iq;          // q轴电流环  (原 pi3_iq_para)
-    Pi_Para_Struct*   p_id;          // d轴电流环  (原 pi3_id_para)
+    pi_state_t*   p_data;        // 运行时数据 (原 p_pidata)
+    pi_param_t*   p_mangle;      // 位置环     (原 pi1_mangle_para)
+    pi_param_t*   p_speed;       // 速度环     (原 pi2_speed_para)
+    pi_param_t*   p_iq;          // q轴电流环  (原 pi3_iq_para)
+    pi_param_t*   p_id;          // d轴电流环  (原 pi3_id_para)
 } MOTOR_PI;
 
 
