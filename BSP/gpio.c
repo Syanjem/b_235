@@ -1,7 +1,7 @@
 #include "gpio.h"
 
 // adc 检测模式的 gpio 配置
-void GPIO_abcBackDetect_Config(void)
+void gpio_abc_back_detect_config(void)
 {
     rcu_periph_clock_enable(RCU_GPIOA);
     rcu_periph_clock_enable(RCU_GPIOB);
@@ -13,23 +13,23 @@ void GPIO_abcBackDetect_Config(void)
 }
 
 
-void GPIO_adcBackDetect_in(void)
+void gpio_adc_back_detect_in(void)
 {
 	timer_enable(TIMER0);
 	timer_primary_output_config(TIMER0, DISABLE);
-	GPIO_abcBackDetect_Config();
+	gpio_abc_back_detect_config();
 }
 
 
-void GPIO_adcBackDetect_out(void)
+void gpio_adc_back_detect_out(void)
 {
-	TIMER0_Init();
+	timer0_init();
 	timer_enable(TIMER0);
 }
 
 
 
-void GPIO_canWait_Config(void)
+void gpio_can_wait_config(void)
 {
 	rcu_periph_clock_enable(RCU_GPIOB);
 	
@@ -44,19 +44,19 @@ void GPIO_canWait_Config(void)
 	nvic_irq_enable(EXTI5_9_IRQn, 0, 2);
 }
 
-void GPIO_canWait_start(void)
+void gpio_can_wait_start(void)
 {
 	i2c_disable(I2C0);
-	GPIO_canWait_Config();
+	gpio_can_wait_config();
 }
 
-void GPIO_canWait_end(void)
+void gpio_can_wait_end(void)
 {
 	i2c_enable(I2C0);
 }
 
 
-void GPIO_extiWait_Config(void)
+void gpio_exti_wait_config(void)
 {
 	rcu_periph_clock_enable(RCU_GPIOB);
 	
@@ -71,21 +71,21 @@ void GPIO_extiWait_Config(void)
 	nvic_irq_enable(EXTI5_9_IRQn, 0, 2);
 }
 
-void GPIO_extiWait_start(void)
+void gpio_exti_wait_start(void)
 {
     timer_disable(TIMER0);                          // 关计数器, 彻底停 PWM
     timer_primary_output_config(TIMER0, DISABLE);   // 关主输出
-    GPIO_abcBackDetect_Config();                           // 三相引脚切 OUT_PP, 高侧关低侧通
+    gpio_abc_back_detect_config();                  // 三相引脚切 OUT_PP, 高侧关低侧通
     i2c_disable(I2C0);
-    GPIO_extiWait_Config();  
+    gpio_exti_wait_config();  
 }
 
-void GPIO_extiWait_end(void)
+void gpio_exti_wait_end(void)
 {
     exti_interrupt_disable(EXTI_8);   // 关 EXTI
 	exti_interrupt_disable(EXTI_9);
     i2c_enable(I2C0);
-    TIMER0_Init();
+    timer0_init();
     timer_enable(TIMER0);
 }
 

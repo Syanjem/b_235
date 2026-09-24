@@ -5,20 +5,20 @@
 #include "timer.h"
 
 
-void GPIO_abcBackDetect_Config(void);
-void GPIO_adcBackDetect_in(void);
-void GPIO_adcBackDetect_out(void);
+void gpio_abc_back_detect_config(void);
+void gpio_adc_back_detect_in(void);
+void gpio_adc_back_detect_out(void);
 
 
-void GPIO_canWait_Config(void);
-void GPIO_canWait_start(void);
-void GPIO_canWait_end(void);
+void gpio_can_wait_config(void);
+void gpio_can_wait_start(void);
+void gpio_can_wait_end(void);
 
 
 
-void GPIO_extiWait_Config(void);
-void GPIO_extiWait_start(void);
-void GPIO_extiWait_end(void);
+void gpio_exti_wait_config(void);
+void gpio_exti_wait_start(void);
+void gpio_exti_wait_end(void);
 extern volatile uint8_t exti_foc_ok;
 void EXTI5_9_IRQHandler(void);
 

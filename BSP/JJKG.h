@@ -5,7 +5,7 @@
 #include "systick.h"
 
 
-void JJKG_Init(void);
+void jjkg_init(void);
 void EXTI3_IRQHandler(void);
 void EXTI15_10_IRQHandler(void);
 

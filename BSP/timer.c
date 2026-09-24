@@ -9,7 +9,7 @@
 // PB15	CH2N
 
 // 中央对齐向上，PWM1（低高低），update触发adc
-void TIMER0_Init(void)
+void timer0_init(void)
 {
     rcu_periph_clock_enable(RCU_TIMER0);
     rcu_periph_clock_enable(RCU_GPIOA);

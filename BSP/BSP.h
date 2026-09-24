@@ -19,15 +19,15 @@
 
 
 
-void BSP_SysClock_Init(void);
-void BSP_timerTrigger_adcDetect_Config(void);
-void BSP_timerTrigger_adcDetect_Enable(void);
-void BSP_Connect_Init(void);
+void bsp_sys_clock_init(void);
+void bsp_timer_trigger_adc_detect_config(void);
+void bsp_timer_trigger_adc_detect_enable(void);
+void bsp_connect_init(void);
 
 
 
-void BSP_Init_Task(void);
-void BSP_Monitor_Mode_InitConfig_Task(void);
+void bsp_init_task(void);
+void bsp_monitor_mode_init_config_task(void);
 
 
 

@@ -14,9 +14,9 @@
 
 int main(void)
 {
-	BSP_SysClock_Init();
-	BSP_timerTrigger_adcDetect_Config();	
-	BSP_Connect_Init();		
+	bsp_sys_clock_init();
+	bsp_timer_trigger_adc_detect_config();	
+	bsp_connect_init();		
 	
 	// 1. 初始化
 	motorData.state.mode 				= STATE_MODE_STANDBY;
@@ -51,7 +51,7 @@ int main(void)
 //	angleZero_float_get((&angle_s);
 //	delay_1ms(1000);
 	
-	BSP_timerTrigger_adcDetect_Enable();	// 使能 adc0, timer0
+	bsp_timer_trigger_adc_detect_enable();	// 使能 adc0, timer0
 	
 	
 	while(1)

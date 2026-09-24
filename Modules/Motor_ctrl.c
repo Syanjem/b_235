@@ -86,17 +86,17 @@ void motor_standby_config(void)
 		}
 		case START_MODE_ADC:
 		{
-			GPIO_adcBackDetect_in();
+			gpio_adc_back_detect_in();
 			break;
 		}
 		case START_MODE_CAN:
 		{
-//			GPIO_canWait_start();
+//			gpio_can_wait_start();
 			break;
 		}
 		case START_MODE_EXTI:
 		{	
-			GPIO_extiWait_start();
+			gpio_exti_wait_start();
 			break;
 		}
 	}
@@ -114,7 +114,7 @@ void motor_working_config(void)
 		case START_MODE_ADC: 
 		{
 			__disable_irq();
-			GPIO_adcBackDetect_out();
+			gpio_adc_back_detect_out();
 			__enable_irq();	
 			break;			
 		}
@@ -122,7 +122,7 @@ void motor_working_config(void)
 		case START_MODE_EXTI:
 		{
 			__disable_irq();
-			GPIO_extiWait_end();
+			gpio_exti_wait_end();
 			__enable_irq();	
 			break;		
 		}
@@ -133,7 +133,7 @@ void motor_working_config(void)
 void motor_stopped_config(void)
 {
 	__disable_irq();
-	GPIO_adcBackDetect_in();
+	gpio_adc_back_detect_in();
 	adc_disable(ADC0);
 	timer_disable(TIMER0);
 }

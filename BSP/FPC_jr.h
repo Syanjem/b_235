@@ -13,7 +13,7 @@
 #define FPC_DISABLE()	gpio_bit_reset(GPIOB, GPIO_PIN_5)
 
 
-void FPC_Init(void);
+void fpc_init(void);
 
 
 #endif

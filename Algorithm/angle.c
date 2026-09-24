@@ -22,7 +22,7 @@ void angleZero_float_get(float* a_zero, int8_t direction)
 	motor_to_eangle(0u);
 	delay_1ms(600);
 
-	angleCs_float_fromEncoder(&a);
+	angle_cs_float_from_encoder(&a);
 	angleDf_float_fix(&a, direction, a);
 	
 	*a_zero = a;
@@ -30,7 +30,7 @@ void angleZero_float_get(float* a_zero, int8_t direction)
 	while(1)
 	{
 		delay_1ms(10);
-		spi0_ATK_16bit(a);
+		spi0_atk_16bit(a);
 	}
 }
 
@@ -51,7 +51,7 @@ void debug_open23_sendEa_dirFix(uint16_t st)
 		delay_1ms(1);
 		motor_to_eangle(ea);
 		ea = (ea + 23u) % 360u;
-		spi0_ATK_16bit(ea);
+		spi0_atk_16bit(ea);
 	}
 }
 

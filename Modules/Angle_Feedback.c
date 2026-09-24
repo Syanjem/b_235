@@ -31,7 +31,7 @@ void Angle_Feedback_Update(angle_state_t* pa)
 	pa->angle_mech_prev = pa->angle_mech;
 	
 	// 2.encoder 测量角度
-	angleCs_float_fromEncoder(&(pa->angle_encoder));
+	angle_cs_float_from_encoder(&(pa->angle_encoder));
 	angleDf_float_fix(&(pa->angle_dir_calib), pa->direction, pa->angle_encoder);
 	
 	// 3.更新 ma

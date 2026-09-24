@@ -1,7 +1,7 @@
 #include "can.h"
 
 // APB1: 60MHz（rcu.c）
-void CAN_Init(void)
+void can0_init(void)
 {
 	rcu_periph_clock_enable(RCU_CAN0);
 	rcu_periph_clock_enable(RCU_GPIOA);

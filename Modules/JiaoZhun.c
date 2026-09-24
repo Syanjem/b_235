@@ -11,13 +11,13 @@ void jiaozhun_mangle_rawion(int8_t* direction)
 	
 	motor_to_eangle(0);
 	delay_1ms(1);
-	angleCs_float_fromEncoder(&ma_now);
+	angle_cs_float_from_encoder(&ma_now);
 	for (int i = 1; i < 100; i++)	// 99 步
 	{
 		ma_pre = ma_now;								// 保存 ma_pre
 		motor_to_eangle(3 * i);
 		delay_1ms(1);
-		angleCs_float_fromEncoder(&ma_now);	// 更新 ma_now
+		angle_cs_float_from_encoder(&ma_now);	// 更新 ma_now
 		
 		if (ma_now >= ma_pre)
 		{
@@ -52,14 +52,14 @@ void jiaozhun_mangle_rawion(int8_t* direction)
 //	
 //	motor_to_eangle(0);
 //	delay_1ms(1);
-//	angleCs_float_fromEncoder(&ma_now);
+//	angle_cs_float_from_encoder(&ma_now);
 //	angleDf_float_fix(&ma_now, angle_s.direction);
 //	for (int i = 1; i < 48; i++)	// 8圈47步（每步60度）
 //	{
 //		ma_pre = ma_now;
 //		motor_to_eangle(60 * i % 360);
 //		delay_1ms(1);
-//		angleCs_float_fromEncoder(&ma_now);
+//		angle_cs_float_from_encoder(&ma_now);
 //		angleDf_float_fix(&ma_now, angle_s.direction, );
 //		
 //		if (ma_now > ma_pre)
@@ -85,7 +85,7 @@ void jiaozhun_mangle_rawion(int8_t* direction)
 //	delay_1ms(10);
 //	
 //	motor_to_eangle(0);
-//	angleCs_float_fromEncoder(pma0);
+//	angle_cs_float_from_encoder(pma0);
 //	angleDf_float_fix(pma0, angle_s.direction);
 //	
 //	delay_1ms(10);

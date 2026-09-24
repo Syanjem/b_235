@@ -5,7 +5,7 @@
 #define I2C0_DEBUG_SLAVE_ADDR		(0xAAu)
 
 
-void I2C0_Init(void)
+void i2c0_init(void)
 {
 	// I2C0
 	// PB8: I2C0_SCL(REMAP)

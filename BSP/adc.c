@@ -4,7 +4,7 @@
 // Ic: PB0, ADC01_IN8
 // Ib: PB1, ADC01_IN9
 
-void ADC0_Init(void)
+void adc0_init(void)
 {
 	rcu_periph_clock_enable(RCU_ADC0);
 	rcu_periph_clock_enable(RCU_GPIOB);

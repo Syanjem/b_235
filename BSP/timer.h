@@ -6,7 +6,7 @@
 
 #include "systick.h"
 
-void TIMER0_Init(void);
+void timer0_init(void);
 
 
 

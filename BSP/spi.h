@@ -3,7 +3,7 @@
 
 #include "gd32f30x_libopt.h"
 
-void SPI0_Init(void);
+void spi0_init(void);
 
 // 磁编码器（encoder）
 // CSN2 : PA4

@@ -6,7 +6,7 @@
 #include <string.h>
 
 
-void CAN_Init(void);
+void can0_init(void);
 void foc_can_fliter_config(void);
 
 extern can_receive_message_struct		rx_int_msg[3];

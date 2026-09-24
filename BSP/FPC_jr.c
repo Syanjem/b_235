@@ -1,6 +1,6 @@
 #include "FPC_jr.h"
 
-void FPC_Init(void)
+void fpc_init(void)
 {
     rcu_periph_clock_enable(RCU_GPIOB);
 

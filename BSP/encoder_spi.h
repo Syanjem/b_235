@@ -10,7 +10,7 @@
 #define	SPI_MT_READ_CMD1	((uint16_t)0x83FF)
 #define	SPI_MT_READ_CMD2	((uint16_t)0x84FF)
 
-void angleCs_float_fromEncoder(float* a_cs);
+void angle_cs_float_from_encoder(float* a_cs);
 void angleCs_uint16_t_fromEncoder(uint16_t* a_cs);
 
 

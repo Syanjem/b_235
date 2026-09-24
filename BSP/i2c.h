@@ -5,7 +5,7 @@
 #include "systick.h"
 
 
-void I2C0_Init(void);
+void i2c0_init(void);
 
 
 void i2c0_sendData_toATK_Debug(uint8_t data);

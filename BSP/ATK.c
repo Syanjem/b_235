@@ -2,7 +2,7 @@
 
 
 
-void spi0_ATK_16bit(uint16_t data)
+void spi0_atk_16bit(uint16_t data)
 {
 	SPI_CSN2_ATK_SELECT();
 	SPI_CSN1_encoder_DESELECT();
@@ -11,7 +11,7 @@ void spi0_ATK_16bit(uint16_t data)
 }
 
 
-void spi0_ATK_32bit(uint16_t data1, uint16_t data2)
+void spi0_atk_32bit(uint16_t data1, uint16_t data2)
 {
 	SPI_CSN2_ATK_SELECT();
 	SPI_CSN1_encoder_DESELECT();

@@ -3,7 +3,7 @@
 // AHB	120MHz
 // APB1	60MHz
 // APB2	120MHz
-void RCU_Init(void)
+void rcu_init(void)
 {
 	// 1. 使能并等待外部晶振(HXTAL)稳定
 	rcu_osci_on(RCU_HXTAL);                                   // 开启外部晶振[citation:3][citation:9]

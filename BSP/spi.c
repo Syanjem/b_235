@@ -2,7 +2,7 @@
 
 // SPI0 初始化
 // SPI0 与磁编码器通信，与上位机/调试机通信
-void SPI0_Init(void)
+void spi0_init(void)
 {
 	rcu_periph_clock_enable(RCU_SPI0);
 	rcu_periph_clock_enable(RCU_GPIOA);

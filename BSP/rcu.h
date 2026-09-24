@@ -3,7 +3,7 @@
 
 #include "gd32f30x_libopt.h"
 
-void RCU_Init(void);
+void rcu_init(void);
 
 
 

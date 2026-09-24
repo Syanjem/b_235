@@ -2,7 +2,7 @@
 
 // JJKG1: PB3
 // JJKG2: PA15
-void JJKG_Init(void)
+void jjkg_init(void)
 {
     rcu_periph_clock_enable(RCU_GPIOB);
     rcu_periph_clock_enable(RCU_GPIOA);
