@@ -470,6 +470,11 @@
               <FileType>1</FileType>
               <FilePath>.\Modules\JiaoZhun.c</FilePath>
             </File>
+            <File>
+              <FileName>can_up.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\Modules\can_up.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

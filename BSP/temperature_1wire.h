@@ -7,9 +7,9 @@
 #define MB1601B_POTR		GPIOB
 #define MB1601B_PIN 		GPIO_PIN_4
 
-// 设置引脚为推挽输出模式
+// 设置引脚为开漏输出模式
 #define MB1601B_MODE_OUT() do { \
-    gpio_init(GPIOB, GPIO_MODE_OUT_PP, GPIO_OSPEED_50MHZ, GPIO_PIN_4); \
+    gpio_init(GPIOB, GPIO_MODE_OUT_OD, GPIO_OSPEED_50MHZ, GPIO_PIN_4); \
 } while(0)
 
 // 设置引脚为上拉输入模式

@@ -18,7 +18,7 @@ void MB1601B_Init(void)
 void MB1601B_Write_Scratchpad(void)
 {
 	if(!MB1601B_Reset())
-	{
+	{	/* 温度传感器运行示例 2 */
 		MB1601B_Write_Byte(0xCC);	// Skip ROM
 		MB1601B_Write_Byte(0x4E);	// Write Scratchpad
 		
@@ -116,14 +116,14 @@ void MB1601B_Write_Byte(uint8_t data)
             MB1601B_OUT_0();
             delay_us(2);
             MB1601B_OUT_1();
-            delay_us(60);
+            delay_us(68);
         }
         else
         {
             MB1601B_OUT_0();
-            delay_us(60);
+            delay_us(65);
             MB1601B_OUT_1();
-            delay_us(2);
+            delay_us(5);
         }
         
         __enable_irq();   // 每个时隙结束后恢复中断
@@ -141,8 +141,9 @@ uint8_t MB1601B_Read_Byte(void)
     {
         __disable_irq();   // 关中断保护时隙
         
-        MB1601B_MODE_OUT();
-        MB1601B_OUT_0();
+		/* 主机拉低电平并释放，转为输入模式，等待 8 us */
+        MB1601B_MODE_OUT();	
+        MB1601B_OUT_0();	
         delay_us(2);
         MB1601B_MODE_IN();
         delay_us(8);
