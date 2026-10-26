@@ -9,7 +9,7 @@
 // PB15	CH2N
 
 // 中央对齐向上，PWM1（低高低），update触发adc
-void timer0_init(void)
+void timer0_init(void) // timer0 高级定时器
 {
     rcu_periph_clock_enable(RCU_TIMER0);
     rcu_periph_clock_enable(RCU_GPIOA);
@@ -77,8 +77,34 @@ void timer0_init(void)
     timer_disable(TIMER0);
 }
 
+void timer1_init(void) // timer1 通用定时器
+{
+    rcu_periph_clock_enable(RCU_TIMER1);
+    timer_deinit(TIMER1);
 
+    timer_parameter_struct		timer_initTypeDef;
+    timer_struct_para_init(&timer_initTypeDef);
+    timer_initTypeDef.prescaler				= 60 - 1;	
+    timer_initTypeDef.period				= 1 - 1;	// 1MHz			
+    timer_initTypeDef.alignedmode			= TIMER_COUNTER_EDGE;	
+    timer_initTypeDef.clockdivision			= TIMER_CKDIV_DIV1;
+    timer_init(TIMER1, &timer_initTypeDef);
+    timer_update_event_enable(TIMER1);
+    timer_auto_reload_shadow_enable(TIMER1);
 
+	timer_interrupt_enable(TIMER1, TIMER_INT_UP);
+	nvic_priority_group_set(NVIC_PRIGROUP_PRE4_SUB0);
+    nvic_irq_enable(TIMER1_IRQn, 1, 0);
+
+    timer_disable(TIMER1);
+}
+
+void TIMER1_IRQHandler(void) {
+    if (timer_interrupt_flag_get(TIMER1, TIMER_INT_FLAG_UP) == SET) {
+        timer_interrupt_flag_clear(TIMER1, TIMER_INT_FLAG_UP);
+        ow_tick();
+    }
+}
 
 
 
